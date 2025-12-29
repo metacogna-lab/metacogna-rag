@@ -7,7 +7,7 @@ import {
   Cpu, GitBranch, Database, Zap, BookOpen, Sparkles, Loader2, Calendar
 } from 'lucide-react';
 import { llmService } from '../services/LLMService';
-import { Type } from '@google/genai';
+import { Type } from '@google/generative-ai';
 
 interface LandingPageViewProps {
   onNavigate: (view: ViewState) => void;

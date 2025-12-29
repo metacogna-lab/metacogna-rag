@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import { AppConfig, LLMProvider, LLMModelID } from "../types";
 
 export interface LLMRequestOptions {

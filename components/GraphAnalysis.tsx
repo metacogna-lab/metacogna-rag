@@ -7,7 +7,7 @@ import {
   Bot, Sparkles, LayoutTemplate, Network, 
   Check, HardDrive
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 
 interface GraphAnalysisProps {
     data: GraphData;

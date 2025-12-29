@@ -7,7 +7,7 @@ import {
     ArrowRight, CheckCircle, AlertOctagon, RefreshCw, Send, BrainCircuit,
     ChevronRight, Play, Shield
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import { AppConfig } from '../types';
 
 // Map string icon names to Lucide components

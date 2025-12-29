@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PaperCard, PaperInput, PaperButton, PaperBadge } from '../components/PaperComponents';
 import { Copy, Wand2, Loader2, Save, Trash2, Clock, Check, Layers, Target, AlertTriangle, Lightbulb, Zap } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import { AVAILABLE_MODELS } from '../constants';
 
 interface SavedPrompt {

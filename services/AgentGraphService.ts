@@ -1,6 +1,6 @@
 
 
-import { Type } from "@google/genai";
+import { Type } from "@google/generative-ai";
 import { AgentGoal, AgentTurn, Idea, AppConfig, AgentAction } from "../types";
 import { trainingService } from "./TrainingDataService";
 import { llmService } from "./LLMService";
