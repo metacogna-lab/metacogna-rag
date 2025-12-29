@@ -1,0 +1,41 @@
+
+version: '3.8'
+
+services:
+  # 1. Vector Database (Embeddings)
+  chromadb:
+    image: chromadb/chroma:latest
+    restart: always
+    volumes:
+      - chroma-data:/chroma/chroma
+    ports:
+      - "8000:8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - rag-network
+
+  # 2. Local LLM Inference (Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    restart: always
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      # CRITICAL: Allow browser to fetch models directly
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  chroma-data:
+  ollama-models:

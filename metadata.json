@@ -1,0 +1,5 @@
+{
+  "name": "Pratejra RAG",
+  "description": "A personal RAG system with a paper-aesthetic UI, featuring semantic search, knowledge graph visualization, and document management.",
+  "requestFramePermissions": []
+}
