@@ -59,15 +59,17 @@ export const GraphAnalysis: React.FC<GraphAnalysisProps> = ({ data, selectedNode
                 : `Graph contains ${data.nodes.length} nodes and ${data.links.length} links. Top entities: ${getTopConnections().map(c => c.label).join(', ')}.`;
 
             const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
-            const ai = new GoogleGenerativeAI({ apiKey });
-            
-            const response = await ai.models.generateContent({
+            const ai = new GoogleGenerativeAI(apiKey);
+            const model = ai.getGenerativeModel({ 
                 model: 'gemini-3-flash-preview',
-                contents: `Summarize the following knowledge graph state.\n\n${context}`,
-                config: { systemInstruction: systemPrompt }
+                systemInstruction: systemPrompt
+            });
+            
+            const response = await model.generateContent({
+                contents: `Summarize the following knowledge graph state.\n\n${context}`
             });
 
-            setSummary(response.text || "No summary generated.");
+            setSummary(response.response.text() || "No summary generated.");
         } catch (e) {
             setSummary("Error generating summary. Check API Key.");
         } finally {

@@ -97,8 +97,14 @@ const ProductAnalysisComponent: React.FC<{
     const runAnalysis = async () => {
         setLoading(true);
         try {
-            const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
-            const ai = new GoogleGenerativeAI({ apiKey });
+            const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
+              ? process.env.API_KEY 
+              : import.meta.env.VITE_API_KEY || '';
+            const ai = new GoogleGenerativeAI(apiKey);
+            const model = ai.getGenerativeModel({ 
+                model: 'gemini-3-flash-preview',
+                systemInstruction: "You are a Product Manager. Analyze the following prompt ideas and propose 3 concrete Product Features or Applications."
+            });
             
             const context = selectedPrompts.map(p => p.content).join('\n---\n');
             let systemPrompt = '';
@@ -115,13 +121,11 @@ const ProductAnalysisComponent: React.FC<{
                     break;
             }
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: `Analyze these inputs:\n\n${context}`,
-                config: { systemInstruction: systemPrompt }
+            const response = await model.generateContent({
+                contents: `Analyze these inputs:\n\n${context}`
             });
             
-            setResult(response.text || "Analysis failed.");
+            setResult(response.response.text() || "Analysis failed.");
         } catch (e) {
             setResult("Error running analysis.");
         } finally {
@@ -237,32 +241,33 @@ export const PromptGenView: React.FC = () => {
     
     try {
       // Safely access API Key
-      const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) 
+      const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
         ? process.env.API_KEY 
-        : '';
+        : import.meta.env.VITE_API_KEY || '';
       
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const systemPrompt = `You are a world-class prompt engineer. Your goal is to take a user's rough idea and convert it into a highly optimized system prompt for an LLM (Large Language Model). 
+      const ai = new GoogleGenerativeAI(apiKey);
+      const model = ai.getGenerativeModel({ 
+        model: 'gemini-3-flash-preview',
+        systemInstruction: `You are a world-class prompt engineer. Your goal is to take a user's rough idea and convert it into a highly optimized system prompt for an LLM (Large Language Model). 
       
       Follow these rules:
       1. Target Model Optimization: Optimize specifically for ${targetModel}.
       2. Style: Use the "${mode}" style. (Precise = clear, structured, constraint-heavy. Creative = descriptive, persona-based, open-ended).
       3. Structure: Include specific sections for [Role], [Context], [Task], and [Constraints].
-      4. Output: ONLY the optimized prompt, no conversational filler.`;
+      4. Output: ONLY the optimized prompt, no conversational filler.`
+      });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview', // Use Gemini to generate the prompt, even if target is GPT
+      const response = await model.generateContent({
         contents: [
             { role: 'user', parts: [{ text: `Original Input: ${inputText}\n\nOptimize this prompt.` }] }
         ],
-        config: {
+        generationConfig: {
             systemInstruction: systemPrompt,
             temperature: temperature
         }
       });
 
-      setGeneratedPrompt(response.text || "Failed to generate prompt.");
+      setGeneratedPrompt(response.response.text() || "Failed to generate prompt.");
     } catch (error) {
       console.error("Prompt generation failed:", error);
       setGeneratedPrompt("Error: Could not access the backend generation service or API Key is missing.");

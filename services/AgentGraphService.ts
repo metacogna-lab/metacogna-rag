@@ -1,6 +1,6 @@
 
 
-import { Type } from "@google/generative-ai";
+import { SchemaType } from "@google/generative-ai";
 import { AgentGoal, AgentTurn, Idea, AppConfig, AgentAction } from "../types";
 import { trainingService } from "./TrainingDataService";
 import { llmService } from "./LLMService";
@@ -58,9 +58,9 @@ export class AgentGraphService {
         
         try {
             const schema = {
-                type: Type.OBJECT,
+                type: SchemaType.OBJECT,
                 properties: {
-                    concepts: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { label: { type: Type.STRING }, type: { type: Type.STRING } } } }
+                    concepts: { type: SchemaType.ARRAY, items: { type: SchemaType.OBJECT, properties: { label: { type: SchemaType.STRING }, type: { type: SchemaType.STRING } } } }
                 }
             };
             const jsonStr = await llmService.generate(configToUse, prompt, { jsonSchema: schema, temperature: 0.7 });
@@ -120,12 +120,12 @@ export class AgentGraphService {
         const schema = {
             type: Type.OBJECT,
             properties: {
-                agentName: { type: Type.STRING },
-                thought: { type: Type.STRING },
-                action: { type: Type.STRING, enum: ["MERGE", "EXPLODE", "SHAKE", "READ_STREAM", "IDLE"] },
-                targetBlockIds: { type: Type.ARRAY, items: { type: Type.STRING } },
-                targetStreamId: { type: Type.STRING },
-                outputContent: { type: Type.STRING }
+                agentName: { type: SchemaType.STRING },
+                thought: { type: SchemaType.STRING },
+                action: { type: SchemaType.STRING, enum: ["MERGE", "EXPLODE", "SHAKE", "READ_STREAM", "IDLE"] },
+                targetBlockIds: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                targetStreamId: { type: SchemaType.STRING },
+                outputContent: { type: SchemaType.STRING }
             }
         };
 

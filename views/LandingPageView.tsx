@@ -7,7 +7,7 @@ import {
   Cpu, GitBranch, Database, Zap, BookOpen, Sparkles, Loader2, Calendar
 } from 'lucide-react';
 import { llmService } from '../services/LLMService';
-import { Type } from '@google/generative-ai';
+import { SchemaType } from '@google/generative-ai';
 
 interface LandingPageViewProps {
   onNavigate: (view: ViewState) => void;
@@ -70,10 +70,10 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate, do
 
         // Strict schema definition
         const schema = {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
-            summary: { type: Type.ARRAY, items: { type: Type.STRING } },
-            insight: { type: Type.STRING }
+            summary: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            insight: { type: SchemaType.STRING }
           },
           required: ["summary", "insight"]
         };

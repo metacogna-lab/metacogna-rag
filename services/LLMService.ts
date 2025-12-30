@@ -57,28 +57,32 @@ export class LLMService {
                             throw new Error("Google API Key is missing. Please check your settings.");
                         }
 
-                        const ai = new GoogleGenerativeAI({ apiKey });
+                        const ai = new GoogleGenerativeAI(apiKey);
                         
-                        // Construct config dynamically
+                        // Construct model params
+                        const modelParams: any = { model: model };
+                        if (options.systemInstruction) {
+                            modelParams.systemInstruction = options.systemInstruction;
+                        }
+                        
+                        const genModel = ai.getGenerativeModel(modelParams);
+                        
+                        // Construct generation config
                         const genConfig: any = {};
                         if (options.temperature !== undefined) genConfig.temperature = options.temperature;
                         if (options.maxTokens !== undefined) genConfig.maxOutputTokens = options.maxTokens;
-                        if (options.systemInstruction) genConfig.systemInstruction = options.systemInstruction;
                         
                         if (options.jsonSchema) {
                             genConfig.responseMimeType = "application/json";
                             genConfig.responseSchema = options.jsonSchema;
                         }
 
-                        const contentPayload = [{ role: 'user', parts: [{ text: prompt }] }];
-
-                        const response = await ai.models.generateContent({
-                            model: model,
-                            contents: contentPayload,
-                            config: genConfig
+                        const response = await genModel.generateContent({
+                            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                            generationConfig: genConfig
                         });
                         
-                        return response.text || "";
+                        return response.response.text() || "";
                     }
 
                     case 'openai': {
@@ -193,12 +197,12 @@ export class LLMService {
                 if (provider === 'google') {
                     if (!apiKey) throw new Error("Google API Key is missing for embedding.");
                     
-                    const ai = new GoogleGenerativeAI({ apiKey });
-                    const res = await ai.models.embedContent({
-                        model: "text-embedding-004",
-                        contents: [{ parts: [{ text }] }]
+                    const ai = new GoogleGenerativeAI(apiKey);
+                    const model = ai.getGenerativeModel({ model: "text-embedding-004" });
+                    const res = await model.embedContent({
+                        content: { parts: [{ text }] }
                     });
-                    return res.embeddings?.[0]?.values || [];
+                    return res.embedding?.values || [];
                 }
                 
                 if (provider === 'openai') {

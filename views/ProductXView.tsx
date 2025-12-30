@@ -57,8 +57,8 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
         updateStepState(currentStep.id, { status: 'generating' });
         
         try {
-            const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-            const ai = new GoogleGenerativeAI({ apiKey });
+            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+            const ai = new GoogleGenerativeAI(apiKey);
 
             // Gather context from previous steps
             let contextAccumulator = "";
@@ -76,14 +76,14 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
             // Add Context
             prompt += `\n\nPREVIOUS CONTEXT:${contextAccumulator}`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+            const model = ai.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+            const response = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                config: { temperature: 0.7 }
+                generationConfig: { temperature: 0.7 }
             });
 
             updateStepState(currentStep.id, { 
-                output: response.text || "Generation failed.", 
+                output: response.response.text() || "Generation failed.", 
                 status: 'generated' 
             });
 
@@ -97,19 +97,19 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
         updateStepState(currentStep.id, { status: 'validating' });
 
         try {
-            const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-            const ai = new GoogleGenerativeAI({ apiKey });
+            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+            const ai = new GoogleGenerativeAI(apiKey);
 
             const prompt = `${currentStep.validationPrompt}\n\nCONTENT TO AUDIT:\n${currentState.output}`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview', // Use Flash for quick validation
+            const validationModel = ai.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+            const response = await validationModel.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                config: { temperature: 0.2 }
+                generationConfig: { temperature: 0.2 }
             });
 
             updateStepState(currentStep.id, { 
-                validation: response.text || "Validation failed.", 
+                validation: response.response.text() || "Validation failed.", 
                 status: 'validated' 
             });
 
@@ -138,8 +138,9 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
                 updateStepState(matchedRule.targetStepId, { status: 'generating', output: '' });
                 
                 try {
-                    const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-                    const ai = new GoogleGenerativeAI({ apiKey });
+                    const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+                    const ai = new GoogleGenerativeAI(apiKey);
+                    const model = ai.getGenerativeModel({ model: 'gemini-3-flash-preview' });
                     
                     // Re-run the step with the pivot prompt + existing context
                     // We assume context exists if we are jumping back
@@ -148,13 +149,12 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
                     
                     const prompt = `${matchedRule.promptOverlay}\n\nUSER FEEDBACK: ${refinerInput}\n\nCURRENT ARTIFACT:\n${context}`;
 
-                    const response = await ai.models.generateContent({
-                        model: 'gemini-3-flash-preview',
+                    const response = await model.generateContent({
                         contents: [{ role: 'user', parts: [{ text: prompt }] }]
                     });
 
                     updateStepState(matchedRule.targetStepId, { 
-                        output: response.text || "Refinement failed.", 
+                        output: response.response.text() || "Refinement failed.", 
                         status: 'generated',
                         validation: '' // Clear validation as output changed
                     });
