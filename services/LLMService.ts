@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AppConfig, LLMProvider, LLMModelID } from "../types";
 
 export interface LLMRequestOptions {
@@ -57,7 +57,7 @@ export class LLMService {
                             throw new Error("Google API Key is missing. Please check your settings.");
                         }
 
-                        const ai = new GoogleGenAI({ apiKey });
+                        const ai = new GoogleGenerativeAI({ apiKey });
                         
                         // Construct config dynamically
                         const genConfig: any = {};
