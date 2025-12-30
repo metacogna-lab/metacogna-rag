@@ -353,7 +353,25 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({ documents, config,
     if (sources.length === 0) filteredDocs.slice(0, 15).forEach(doc => sources.push({ id: doc.id, documentTitle: doc.title, snippet: `Document Title: ${doc.title}. Metadata: ${JSON.stringify(doc.metadata)}.`, score: 1, page: 1 }));
     
     try {
-        const result = await ragSystem.generateRAGResponse(`Task: Generate a concise summary of the provided document set.\nSystem Instruction: ${activePrompt.content}`, sources, config.userGoals, 0.3, activePrompt.content);
+        // Map prompt ID to agentType
+        const agentTypeMap: Record<string, string> = {
+            'sp-1': 'graph-analyst',
+            'sp-2': 'executive-summary',
+            'sp-3': 'technical-auditor',
+            'sp-4': 'future-planner'
+        };
+        const agentType = selectedPromptId ? agentTypeMap[selectedPromptId] : 'executive-summary';
+        
+        const result = await ragSystem.generateRAGResponse(
+            `Task: Generate a concise summary of the provided document set.\nSystem Instruction: ${activePrompt.content}`, 
+            sources, 
+            config.userGoals, 
+            0.3, 
+            activePrompt.content,
+            config.llm,
+            undefined,
+            agentType
+        );
         setSummary(result);
     } catch (e) { setSummary("Failed to generate summary. Please check your API key and connection."); } finally { setIsSummarizing(false); }
   };

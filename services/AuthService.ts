@@ -2,9 +2,9 @@
 import { User } from "../types";
 import { systemLogs } from "./LogService";
 import { observability } from "./Observability";
+import { apiPost } from "./ApiClient";
 
 const STORAGE_KEY_USERS = 'pratejra_users_db_secure_v2';
-const API_BASE_URL = '/api/auth'; // Cloudflare Worker Endpoint
 
 class AuthService {
     private users: User[] = [];
@@ -127,18 +127,15 @@ class AuthService {
 
             // 3. Persist (Try Cloud D1 first, fallback to Local)
             try {
-                const res = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newUser)
-                });
-                if (!res.ok && res.status !== 404) {
-                    const err = await res.json();
-                    throw new Error(err.message || 'API Error');
-                }
+                await apiPost('/auth/register', newUser);
+                // If successful, continue to local cache update
+            } catch (e: any) {
                 // If 404 (local dev without worker), we fall through to local storage logic below
-            } catch (e) {
-                console.warn("D1 Registration failed, using LocalStorage fallback", e);
+                if (e.message?.includes('404') || e.message?.includes('Not Found')) {
+                    console.warn("D1 Registration failed, using LocalStorage fallback", e);
+                } else {
+                    throw e;
+                }
             }
 
             // Always update local cache for immediate feedback
@@ -167,21 +164,17 @@ class AuthService {
             if (!user) {
                 try {
                     const passHash = await this.hash(password);
-                    const res = await fetch(`${API_BASE_URL}/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: userHash, passwordHash: passHash })
+                    const data = await apiPost<{ success: boolean; user?: User }>('/auth/login', {
+                        username: userHash,
+                        passwordHash: passHash
                     });
                     
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.success && data.user) {
-                            user = data.user;
-                            // Cache valid remote user locally
-                            if (!this.users.find(u => u.id === user!.id)) {
-                                this.users.push(user!);
-                                this.saveUsers();
-                            }
+                    if (data.success && data.user) {
+                        user = data.user;
+                        // Cache valid remote user locally
+                        if (!this.users.find(u => u.id === user!.id)) {
+                            this.users.push(user!);
+                            this.saveUsers();
                         }
                     }
                 } catch (e) {

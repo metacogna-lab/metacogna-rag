@@ -98,28 +98,49 @@ const ProductAnalysisComponent: React.FC<{
         setLoading(true);
         try {
             const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
-              ? process.env.API_KEY 
-              : import.meta.env.VITE_API_KEY || '';
+              ? process.env.GEMINI_API_KEY 
+              : import.meta.env.VITE_GEMINI_API_KEY || '';
             const ai = new GoogleGenerativeAI(apiKey);
-            const model = ai.getGenerativeModel({ 
-                model: 'gemini-3-flash-preview',
-                systemInstruction: "You are a Product Manager. Analyze the following prompt ideas and propose 3 concrete Product Features or Applications."
-            });
             
             const context = selectedPrompts.map(p => p.content).join('\n---\n');
             let systemPrompt = '';
             
             switch(mode) {
                 case 'product':
-                    systemPrompt = "You are a Product Manager. Analyze the following prompt ideas and propose 3 concrete Product Features or Applications.";
+                    systemPrompt = `You are a Product Manager analyzing prompt ideas.
+Your task:
+- Analyze the provided prompt ideas for their potential as product features
+- Propose 3 concrete Product Features or Applications
+- Consider: user value, feasibility, market fit, technical requirements
+- Structure each proposal with: Feature Name, User Benefit, Implementation Approach
+- Prioritize features that solve real problems and have clear value propositions`;
                     break;
                 case 'goals':
-                    systemPrompt = "You are a Strategic Planner. Analyze the prompts and suggest a Roadmap Progression to achieve these capabilities.";
+                    systemPrompt = `You are a Strategic Planner analyzing prompts for capability development.
+Your task:
+- Analyze the prompts to understand desired capabilities
+- Suggest a Roadmap Progression to achieve these capabilities
+- Break down into phases: Immediate (0-3 months), Short-term (3-6 months), Long-term (6-12 months)
+- Identify dependencies, prerequisites, and milestones
+- Consider resource requirements and risk factors
+- Provide actionable steps with clear success criteria`;
                     break;
                 case 'criticism':
-                    systemPrompt = "You are a Lead Critic. Analyze the prompts for flaws, edge cases, and safety risks. Be harsh but constructive.";
+                    systemPrompt = `You are a Lead Critic performing rigorous analysis.
+Your task:
+- Analyze prompts for flaws, edge cases, and safety risks
+- Be harsh but constructive in your critique
+- Identify: logical inconsistencies, implementation challenges, potential failures
+- Consider: scalability, security, user experience, maintainability
+- Provide specific, actionable feedback with examples
+- Suggest improvements and alternatives where appropriate`;
                     break;
             }
+            
+            const model = ai.getGenerativeModel({ 
+                model: 'gemini-3-flash-preview',
+                systemInstruction: systemPrompt
+            });
 
             const response = await model.generateContent({
                 contents: `Analyze these inputs:\n\n${context}`
@@ -241,9 +262,9 @@ export const PromptGenView: React.FC = () => {
     
     try {
       // Safely access API Key
-      const apiKey = (typeof process !== 'undefined' && process.env?.API_KEY) 
-        ? process.env.API_KEY 
-        : import.meta.env.VITE_API_KEY || '';
+      const apiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) 
+        ? process.env.GEMINI_API_KEY 
+        : import.meta.env.VITE_GEMINI_GEMINI_API_KEY || '';
       
       const ai = new GoogleGenerativeAI(apiKey);
       const model = ai.getGenerativeModel({ 

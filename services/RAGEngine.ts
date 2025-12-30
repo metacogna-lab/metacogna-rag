@@ -6,6 +6,7 @@ import { trainingService } from "./TrainingDataService";
 import { llmService } from "./LLMService";
 import { analyticsService } from "./AnalyticsService";
 import { systemLogs } from "./LogService";
+import { apiPost, apiGet } from "./ApiClient";
 
 // Configuration for the RAG Engine
 const CONFIG = {
@@ -13,7 +14,6 @@ const CONFIG = {
   overlap: 50,
   vectorDimensions: 1536,
   rateLimitRPM: 10,
-  workerUrl: '/api', // Proxy or absolute URL to Cloudflare Worker
 };
 
 interface VectorChunk {
@@ -30,7 +30,7 @@ export class RAGEngine {
   private fallbackConfig: AppConfig['llm'] = {
       provider: 'google',
       model: 'gemini-3-flash-preview',
-      apiKeys: { google: process.env.API_KEY },
+      apiKeys: { google: process.env.GEMINI_API_KEY },
       temperature: 0.3
   };
 
@@ -51,22 +51,12 @@ export class RAGEngine {
 
       try {
           // Send to Cloudflare Worker
-          const response = await fetch(`${CONFIG.workerUrl}/ingest`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  docId: document.id,
-                  title: document.title,
-                  content: content,
-                  metadata: document.metadata || {}
-              })
+          const result = await apiPost<{ success: boolean; chunks: number; graphNodes: number }>('/ingest', {
+              docId: document.id,
+              title: document.title,
+              content: content,
+              metadata: document.metadata || {}
           });
-
-          if (!response.ok) {
-              throw new Error(`Worker Error: ${response.statusText}`);
-          }
-
-          const result = await response.json();
           
           systemLogs.add({ 
               level: 'success', 
@@ -104,14 +94,12 @@ export class RAGEngine {
   async search(query: string, documents?: Document[], filterDocIds?: string[], llmConfig?: AppConfig['llm']): Promise<Source[]> {
     // Try Worker Search first
     try {
-        const response = await fetch(`${CONFIG.workerUrl}/search`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, topK: 5 })
+        const data = await apiPost<{ results: Array<{ id: string; score: number; metadata: any }> }>('/search', {
+            query,
+            topK: 5
         });
         
-        if (response.ok) {
-            const data = await response.json();
+        if (data.results && data.results.length > 0) {
             return data.results.map((r: any, i: number) => ({
                 id: r.id,
                 documentTitle: r.metadata?.title || 'Unknown',
@@ -136,6 +124,7 @@ export class RAGEngine {
   /**
    * GENERATION WITH MEMORY
    * Accepts chat history/context string to maintain conversation state.
+   * Now uses Worker /api/chat endpoint for secure LLM calls.
    */
   async generateRAGResponse(
       query: string, 
@@ -144,17 +133,54 @@ export class RAGEngine {
       temperature: number = 0.2,
       systemPrompt?: string,
       llmConfig?: AppConfig['llm'],
-      historyContext?: string // NEW: Context from MemoryService
+      historyContext?: string, // Context from MemoryService
+      agentType?: string // NEW: Agent type for automatic prompt routing
   ): Promise<string> {
-    const configToUse = llmConfig || this.fallbackConfig;
     this.checkRateLimit();
 
-    const contextBlock = sources.map(s => `[Doc: ${s.documentTitle}]\n${s.snippet}`).join('\n\n');
-    
-    // Construct sophisticated prompt with memory
-    const fullPrompt = `
+    try {
+        // Use Worker /api/chat endpoint (handles search + LLM)
+        const result = await apiPost<{ 
+          response: string; 
+          sources: Source[]; 
+          provider: string; 
+          model: string;
+        }>('/chat', {
+          query,
+          agentType, // NEW: Pass agent type for routing
+          sources: sources.length > 0 ? sources : undefined, // Pass sources if already retrieved
+          llmConfig: llmConfig || this.fallbackConfig,
+          systemPrompt, // Explicit prompt takes precedence over agentType
+          temperature,
+          historyContext,
+          userGoals
+        });
+
+        systemLogs.add({ 
+          level: 'success', 
+          category: 'system', 
+          source: 'RAG:Gen', 
+          message: `Response generated via ${result.provider}/${result.model}.` 
+        });
+        
+        return result.response;
+    } catch (error: any) {
+        systemLogs.add({ 
+          level: 'error', 
+          category: 'system', 
+          source: 'RAG:Gen', 
+          message: 'Gen failed', 
+          details: error.message 
+        });
+        
+        // Fallback to local LLM service if worker unavailable
+        console.warn("Worker chat endpoint failed, falling back to local LLM:", error);
+        try {
+          const configToUse = llmConfig || this.fallbackConfig;
+          const contextBlock = sources.map(s => `[Doc: ${s.documentTitle}]\n${s.snippet}`).join('\n\n');
+          const fullPrompt = `
     [SYSTEM CONTEXT]
-    Goal: ${userGoals}
+    Goal: ${userGoals || 'Help the user'}
     Role: ${systemPrompt || 'Helpful Assistant'}
     
     [SHORT-TERM MEMORY / CHAT HISTORY]
@@ -168,14 +194,11 @@ export class RAGEngine {
     
     Answer the user's question based on the Knowledge and Memory. If the answer is in Memory, prioritize it.
     `;
-
-    try {
-        const responseText = await llmService.generate(configToUse, fullPrompt, { temperature });
-        systemLogs.add({ level: 'success', category: 'system', source: 'RAG:Gen', message: 'Response generated.' });
-        return responseText;
-    } catch (error: any) {
-        systemLogs.add({ level: 'error', category: 'system', source: 'RAG:Gen', message: 'Gen failed', details: error.message });
-        return "I encountered an error generating the response.";
+          const responseText = await llmService.generate(configToUse, fullPrompt, { temperature });
+          return responseText;
+        } catch (fallbackError: any) {
+          return "I encountered an error generating the response. Please check your API keys or try again later.";
+        }
     }
   }
 
@@ -186,13 +209,10 @@ export class RAGEngine {
    */
   async analyzeGraph(): Promise<GraphData> {
       try {
-          const response = await fetch(`${CONFIG.workerUrl}/graph`);
-          if (response.ok) {
-              const data = await response.json();
-              // Merge with MOCK_GRAPH_DATA if needed, or replace
-              if (data.nodes && data.nodes.length > 0) {
-                  return { nodes: data.nodes, links: data.links };
-              }
+          const data = await apiGet<{ nodes: GraphNode[]; links: GraphLink[] }>('/graph');
+          // Merge with MOCK_GRAPH_DATA if needed, or replace
+          if (data.nodes && data.nodes.length > 0) {
+              return { nodes: data.nodes, links: data.links };
           }
       } catch (e) {
           console.warn("Failed to fetch graph from worker, using local cache/mock.");

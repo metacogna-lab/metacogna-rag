@@ -217,7 +217,7 @@ DEFAULT_CONFIG = {
     provider: 'google',
     model: 'gemini-3-flash-preview',
     temperature: 0.3,
-    apiKeys: { google: process.env.API_KEY }
+    apiKeys: { google: process.env.GEMINI_API_KEY }
   },
   vaults: [{ id: 'v1', name: 'Local Vault', type: 'local' }]
 }

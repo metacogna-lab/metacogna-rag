@@ -57,7 +57,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
         updateStepState(currentStep.id, { status: 'generating' });
         
         try {
-            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ? process.env.GEMINI_API_KEY : import.meta.env.VITE_GEMINI_API_KEY || '').trim();
             const ai = new GoogleGenerativeAI(apiKey);
 
             // Gather context from previous steps
@@ -97,7 +97,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
         updateStepState(currentStep.id, { status: 'validating' });
 
         try {
-            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+            const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ? process.env.GEMINI_API_KEY : import.meta.env.VITE_GEMINI_API_KEY || '').trim();
             const ai = new GoogleGenerativeAI(apiKey);
 
             const prompt = `${currentStep.validationPrompt}\n\nCONTENT TO AUDIT:\n${currentState.output}`;
@@ -138,7 +138,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
                 updateStepState(matchedRule.targetStepId, { status: 'generating', output: '' });
                 
                 try {
-                    const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
+                    const apiKey = (config.llm.apiKeys.google || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ? process.env.API_KEY : import.meta.env.VITE_API_KEY || '').trim();
                     const ai = new GoogleGenerativeAI(apiKey);
                     const model = ai.getGenerativeModel({ model: 'gemini-3-flash-preview' });
                     

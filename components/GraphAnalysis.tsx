@@ -25,7 +25,19 @@ export const GraphAnalysis: React.FC<GraphAnalysisProps> = ({ data, selectedNode
     
     // Prompt State
     const [promptTemplate, setPromptTemplate] = useState("Analyze the relationship between {{node}} and its connections in the context of {{context}}.");
-    const [systemPrompt, setSystemPrompt] = useState("You are a knowledge graph analyst. Provide concise, structural insights.");
+    const [systemPrompt, setSystemPrompt] = useState(`You are a knowledge graph analyst specializing in network analysis.
+Your expertise:
+- Identify central nodes (high-degree, high-betweenness centrality)
+- Detect clusters and communities using graph algorithms
+- Analyze relationship patterns and connection strengths
+- Provide concise, structural insights focusing on:
+  * Centrality metrics (which nodes are most influential)
+  * Cluster identification (groups of related concepts)
+  * Bridge nodes (connections between clusters)
+  * Isolated components (disconnected subgraphs)
+- Highlight important connections that might not be immediately obvious
+- Suggest graph improvements or missing connections
+Keep insights actionable and focused on graph structure.`);
     const [isEditingTemplate, setIsEditingTemplate] = useState(true); // Default to expanded
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     

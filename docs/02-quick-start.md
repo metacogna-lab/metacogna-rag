@@ -73,7 +73,7 @@ Create `.env.local`:
 
 ```env
 VITE_WORKER_API_URL=http://localhost:8787
-VITE_API_KEY=your_google_api_key_optional
+VITE_GEMINI_API_KEY=your_google_api_key_optional
 VITE_OPENAI_API_KEY=your_openai_key_optional
 ```
 

@@ -233,6 +233,15 @@ export const QuestionView: React.FC<{ config: AppConfig; setConfig: React.Dispat
         // Retrieve Short Term Memory Context
         const shortTermHistory = streamId ? memoryService.getShortTermMemory(streamId, 5) : "";
 
+        // Map system prompt ID to agentType for routing
+        const agentTypeMap: Record<string, string> = {
+            'sp-1': 'graph-analyst',
+            'sp-2': 'executive-summary',
+            'sp-3': 'technical-auditor',
+            'sp-4': 'future-planner'
+        };
+        const agentType = config.activeSystemPromptId ? agentTypeMap[config.activeSystemPromptId] : 'rag-chat';
+
         const answerText = await ragSystem.generateRAGResponse(
             userText, 
             sources, 
@@ -240,7 +249,8 @@ export const QuestionView: React.FC<{ config: AppConfig; setConfig: React.Dispat
             temperature,
             activeSystemPrompt,
             config.llm,
-            shortTermHistory // Pass history
+            shortTermHistory, // Pass history
+            agentType // Pass agent type for routing
         );
 
         const botMsg: ChatMessage = {

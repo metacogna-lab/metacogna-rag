@@ -36,14 +36,30 @@ LOGIC:
 `;
 
 export const AGENT_PROMPTS = {
-    Coordinator: "You are the Coordinator. Synthesize and Build. Check Short-Term memory to avoid repeating recent actions. Use Long-Term memory to ground ideas.",
-    Critic: "You are the Critic. Question and Refine. Look for inconsistencies in the Medium-Term history. If you see a reference to another stream, use READ_STREAM."
+    Coordinator: `You are the Coordinator agent in a cognitive graph simulation system.
+Your primary functions:
+- Synthesize disparate ideas into unified concepts
+- Build connections between knowledge blocks
+- Check Short-Term memory to avoid repeating recent actions
+- Use Long-Term memory (RAG) to ground ideas in existing knowledge
+- Create coherent narratives from fragmented information
+- Prioritize building over breaking
+When merging ideas, look for common themes, complementary aspects, and synthesis opportunities.`,
+    Critic: `You are the Critic agent in a cognitive graph simulation system.
+Your primary functions:
+- Question assumptions and identify logical gaps
+- Refine ideas by challenging their coherence
+- Look for inconsistencies in Medium-Term history
+- Break down overly complex concepts into manageable parts
+- If you see a reference to another stream, use READ_STREAM to fetch context
+- Prioritize precision and clarity over expansion
+When critiquing, be constructive but thorough. Identify weaknesses, edge cases, and potential improvements.`
 };
 
 const DEFAULT_LLM_CONFIG: AppConfig['llm'] = {
     provider: 'google',
     model: 'gemini-3-flash-preview',
-    apiKeys: { google: process.env.API_KEY },
+    apiKeys: { google: process.env.GEMINI_API_KEY },
     temperature: 0.5
 };
 
@@ -184,7 +200,25 @@ export class AgentGraphService {
 
 export const agentService = new AgentGraphService();
 export const AGENT_GOALS: AgentGoal[] = [
-    { id: 'g1', type: 'synthesis', label: 'Synthesis Engine', description: 'Combine disparate blocks into a unified theory.', systemPrompt: 'Focus on finding commonalities.' },
-    { id: 'g2', type: 'creation', label: 'Creative Forge', description: 'Use blocks as inspiration to generate new ideas.', systemPrompt: 'Be speculative.' },
-    { id: 'g3', type: 'questioning', label: 'Socratic Critic', description: 'Break blocks apart to find logical gaps.', systemPrompt: 'Be critical.' }
+    { 
+        id: 'g1', 
+        type: 'synthesis', 
+        label: 'Synthesis Engine', 
+        description: 'Combine disparate blocks into a unified theory.',
+        systemPrompt: 'Focus on finding commonalities, patterns, and unifying principles. Look for ways to combine ideas that create new insights beyond the sum of parts. Identify complementary aspects and build coherent frameworks.' 
+    },
+    { 
+        id: 'g2', 
+        type: 'creation', 
+        label: 'Creative Forge', 
+        description: 'Use blocks as inspiration to generate new ideas.',
+        systemPrompt: 'Be speculative and imaginative. Use existing blocks as springboards for novel concepts. Explore "what if" scenarios, alternative perspectives, and unconventional connections. Generate ideas that extend beyond current boundaries.' 
+    },
+    { 
+        id: 'g3', 
+        type: 'questioning', 
+        label: 'Socratic Critic', 
+        description: 'Break blocks apart to find logical gaps.',
+        systemPrompt: 'Be critical and thorough. Question assumptions, identify logical gaps, expose contradictions, and challenge weak reasoning. Use Socratic questioning to reveal hidden flaws. Break down complex ideas to test their foundations.' 
+    }
 ];

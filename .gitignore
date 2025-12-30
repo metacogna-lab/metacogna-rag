@@ -4,6 +4,7 @@
 .env.staging
 .env.local
 .env.test
+workers.env
 
 # Logs
 logs

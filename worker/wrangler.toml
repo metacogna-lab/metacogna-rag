@@ -34,10 +34,15 @@ bucket_name = "metacogna-vault"
 OPENAI_API_BASE = "https://openrouter.ai/api/v1"
 ENVIRONMENT = "production"
 SERVICE_NAME = "metacogna"
+API_BASE_URL = "https://api.metacogna.ai"
 
-
-
-
+# --- SECRETS (Set via: wrangler secret put <NAME>) ---
+# These should be set as secrets, not in this file:
+# GOOGLE_API_KEY - Google Gemini API key (optional, for Google provider)
+# OPENAI_API_KEY - OpenAI API key (optional, for OpenAI provider)
+# ANTHROPIC_API_KEY - Anthropic API key (optional, for Anthropic provider)
+# LANGFUSE_PUBLIC_KEY - Langfuse public key (optional)
+# LANGFUSE_SECRET_KEY - Langfuse secret key (optional)
 
 
 

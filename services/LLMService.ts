@@ -34,7 +34,7 @@ export class LLMService {
     // Helper to get the right API key, ensuring no whitespace
     private getKey(config: AppConfig['llm']): string {
         switch (config.provider) {
-            case 'google': return (config.apiKeys.google || process.env.API_KEY || '').trim();
+            case 'google': return (config.apiKeys.google || process.env.GEMINI_API_KEY || '').trim();
             case 'openai': return (config.apiKeys.openai || '').trim();
             case 'anthropic': return (config.apiKeys.anthropic || '').trim();
             default: return '';

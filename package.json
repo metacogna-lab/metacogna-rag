@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "jest",
+    "test:worker": "bun test worker/tests",
     "worker:dev": "bun wrangler dev",
     "worker:deploy": "bun wrangler deploy",
     "worker:tail": "bun wrangler tail",

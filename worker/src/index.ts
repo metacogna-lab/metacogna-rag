@@ -11,7 +11,98 @@ interface Env {
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
   LANGFUSE_HOST?: string;
+  API_BASE_URL?: string;
+  // LLM API Keys (stored as secrets)
+  GEMINI_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
 }
+
+// Agent system prompts mapping (using enhanced prompts)
+const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
+  'rag-chat': 'You are a helpful assistant that answers questions based on retrieved knowledge. Prioritize accuracy and cite sources when relevant.',
+  'graph-analyst': `You are a knowledge graph analyst specializing in structural analysis of information networks.
+Your role is to:
+- Identify central nodes and their influence in the graph
+- Detect clusters and communities of related concepts
+- Analyze relationship patterns and connection strengths
+- Provide concise, actionable insights about graph topology
+- Highlight important connections that might not be immediately obvious
+Focus on structural insights, centrality metrics, and cluster identification.`,
+  'executive-summary': `You are an executive communication specialist. Generate professional, high-level summaries.
+Your approach:
+- Assume the user is an expert in their field
+- Use formal, business-appropriate language
+- Focus on key insights and strategic implications
+- Structure summaries with clear sections (Overview, Key Findings, Recommendations)
+- Maintain brevity while ensuring completeness
+- Highlight actionable takeaways and next steps`,
+  'technical-auditor': `You are a technical systems auditor. Provide raw, detailed technical analysis.
+Your focus areas:
+- Data density and distribution patterns
+- Metadata structure and completeness
+- Type classifications and taxonomies
+- Performance implications and bottlenecks
+- Data quality metrics and anomalies
+- Technical debt indicators
+Be precise, use technical terminology, and provide quantifiable observations.`,
+  'future-planner': `You are a strategic future planner. Analyze content to predict and plan ahead.
+Your process:
+- Identify patterns and trends in the current knowledge base
+- Predict future projects, learning paths, or knowledge gaps
+- Suggest concrete next steps with priorities
+- Map dependencies between concepts and goals
+- Highlight opportunities for growth and development
+- Provide actionable roadmaps with milestones
+Be forward-looking, practical, and specific in your recommendations.`,
+  'coordinator': `You are the Coordinator agent in a cognitive graph simulation system.
+Your primary functions:
+- Synthesize disparate ideas into unified concepts
+- Build connections between knowledge blocks
+- Check Short-Term memory to avoid repeating recent actions
+- Use Long-Term memory (RAG) to ground ideas in existing knowledge
+- Create coherent narratives from fragmented information
+- Prioritize building over breaking
+When merging ideas, look for common themes, complementary aspects, and synthesis opportunities.`,
+  'critic': `You are the Critic agent in a cognitive graph simulation system.
+Your primary functions:
+- Question assumptions and identify logical gaps
+- Refine ideas by challenging their coherence
+- Look for inconsistencies in Medium-Term history
+- Break down overly complex concepts into manageable parts
+- If you see a reference to another stream, use READ_STREAM to fetch context
+- Prioritize precision and clarity over expansion
+When critiquing, be constructive but thorough. Identify weaknesses, edge cases, and potential improvements.`,
+  'supervisor': `You are the SUPERVISOR SUPER AGENT, a metacognitive orchestration layer that monitors and regulates the entire system.
+Your core responsibility: Evaluate, inhibit, and refine system decisions - you do NOT execute tasks directly.
+Execute a cognitive loop: (1) Inhibitory Control - check alignment with user values/goals, (2) Counterfactual Simulation - assess worst-case downstream effects, (3) Epistemic Humility - calculate confidence scores, (4) Recursive Self-Correction - update policies based on patterns.`,
+  'product-manager': `You are a Product Manager analyzing prompt ideas.
+Your task:
+- Analyze the provided prompt ideas for their potential as product features
+- Propose 3 concrete Product Features or Applications
+- Consider: user value, feasibility, market fit, technical requirements
+- Structure each proposal with: Feature Name, User Benefit, Implementation Approach
+- Prioritize features that solve real problems and have clear value propositions`,
+  'strategic-planner': `You are a Strategic Planner analyzing prompts for capability development.
+Your task:
+- Analyze the prompts to understand desired capabilities
+- Suggest a Roadmap Progression to achieve these capabilities
+- Break down into phases: Immediate (0-3 months), Short-term (3-6 months), Long-term (6-12 months)
+- Identify dependencies, prerequisites, and milestones
+- Consider resource requirements and risk factors
+- Provide actionable steps with clear success criteria`,
+  'lead-critic': `You are a Lead Critic performing rigorous analysis.
+Your task:
+- Analyze prompts for flaws, edge cases, and safety risks
+- Be harsh but constructive in your critique
+- Identify: logical inconsistencies, implementation challenges, potential failures
+- Consider: scalability, security, user experience, maintainability
+- Provide specific, actionable feedback with examples
+- Suggest improvements and alternatives where appropriate`,
+  'synthesis-engine': 'Focus on finding commonalities, patterns, and unifying principles. Look for ways to combine ideas that create new insights beyond the sum of parts. Identify complementary aspects and build coherent frameworks.',
+  'creative-forge': 'Be speculative and imaginative. Use existing blocks as springboards for novel concepts. Explore "what if" scenarios, alternative perspectives, and unconventional connections. Generate ideas that extend beyond current boundaries.',
+  'socratic-critic': 'Be critical and thorough. Question assumptions, identify logical gaps, expose contradictions, and challenge weak reasoning. Use Socratic questioning to reveal hidden flaws. Break down complex ideas to test their foundations.'
+};
 
 // Helper to construct JSON response
 const jsonResponse = (data: any, status = 200) => 
@@ -44,6 +135,15 @@ export default {
     }
 
     try {
+      // --- HEALTH CHECK ---
+      if (path === '/api/health' && method === 'GET') {
+        return jsonResponse({ 
+          status: 'ok', 
+          timestamp: Date.now(),
+          service: 'metacogna'
+        });
+      }
+
       // --- AUTH ROUTE ---
       if (path === '/api/auth/login' && method === 'POST') {
         const { username, passwordHash } = await request.json() as any;
@@ -187,6 +287,157 @@ export default {
         }));
 
         return jsonResponse({ nodes: formattedNodes, links: formattedLinks });
+      }
+
+      // --- CHAT ROUTE (RAG + LLM) ---
+      if (path === '/api/chat' && method === 'POST') {
+        const { 
+          query, 
+          agentType,  // NEW: Routing field for automatic prompt selection
+          sources: providedSources, 
+          llmConfig, 
+          systemPrompt,  // Can override agentType prompt
+          temperature = 0.2, 
+          historyContext, 
+          userGoals,
+          topK = 5 
+        } = await request.json() as any;
+
+        // Resolve system prompt with precedence: explicit systemPrompt > agentType > default
+        const resolvedSystemPrompt = systemPrompt 
+          || (agentType && AGENT_SYSTEM_PROMPTS[agentType])
+          || 'You are a helpful assistant.';
+
+        // 1. Perform vector search if sources not provided
+        let sources: any[] = providedSources || [];
+        if (!providedSources || providedSources.length === 0) {
+          const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+          const searchResults = await env.VECTOR_INDEX.query(embedding.data[0], { topK, returnMetadata: true });
+          sources = searchResults.matches.map((r: any) => ({
+            id: r.id,
+            documentTitle: r.metadata?.title || 'Unknown',
+            snippet: r.metadata?.content || '',
+            score: r.score,
+            metadata: r.metadata
+          }));
+        }
+
+        // 2. Build context from sources
+        const contextBlock = sources.map(s => `[Doc: ${s.documentTitle}]\n${s.snippet}`).join('\n\n');
+        
+        // 3. Construct prompt (matching RAGEngine format)
+        const fullPrompt = `
+    [SYSTEM CONTEXT]
+    Goal: ${userGoals || 'Help the user'}
+    Role: ${resolvedSystemPrompt}
+    
+    [SHORT-TERM MEMORY / CHAT HISTORY]
+    ${historyContext || "No previous context."}
+
+    [RETRIEVED KNOWLEDGE]
+    ${contextBlock}
+
+    [USER QUESTION]
+    ${query}
+    
+    Answer the user's question based on the Knowledge and Memory. If the answer is in Memory, prioritize it.
+    `;
+
+        // 4. Call LLM
+        let responseText = '';
+        const provider = llmConfig?.provider || 'workers-ai';
+        const model = llmConfig?.model || '@cf/meta/llama-3-8b-instruct';
+
+        try {
+          if (provider === 'workers-ai' || !llmConfig) {
+            // Use Cloudflare Workers AI (free)
+            const aiResponse = await env.AI.run(model, {
+              messages: [
+                { role: 'system', content: resolvedSystemPrompt },
+                { role: 'user', content: fullPrompt }
+              ],
+              temperature
+            });
+            responseText = aiResponse.response || '';
+          } else {
+            // Use external LLM APIs
+            const apiKey = provider === 'google' ? env.GEMINI_API_KEY 
+                         : provider === 'openai' ? env.OPENAI_API_KEY
+                         : provider === 'anthropic' ? env.ANTHROPIC_API_KEY
+                         : null;
+
+            if (!apiKey) {
+              throw new Error(`${provider} API key not configured`);
+            }
+
+            if (provider === 'openai') {
+              const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                  model: model,
+                  messages: [
+                    { role: 'system', content: resolvedSystemPrompt },
+                    { role: 'user', content: fullPrompt }
+                  ],
+                  temperature,
+                  max_tokens: llmConfig.maxTokens || 2048
+                })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error?.message || 'OpenAI Error');
+              responseText = data.choices?.[0]?.message?.content || '';
+            } else if (provider === 'anthropic') {
+              const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': apiKey,
+                  'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                  model: model,
+                  system: resolvedSystemPrompt,
+                  messages: [{ role: 'user', content: fullPrompt }],
+                  max_tokens: llmConfig.maxTokens || 2048,
+                  temperature
+                })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error?.message || 'Anthropic Error');
+              responseText = data.content?.[0]?.text || '';
+            } else if (provider === 'google') {
+              // Google Gemini via API
+              const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: fullPrompt }] }],
+                  generationConfig: {
+                    temperature,
+                    maxOutputTokens: llmConfig.maxTokens || 2048
+                  }
+                })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error?.message || 'Google AI Error');
+              responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+          }
+        } catch (llmError: any) {
+          console.error('LLM generation failed:', llmError);
+          responseText = `I encountered an error generating the response: ${llmError.message}`;
+        }
+
+        return jsonResponse({
+          response: responseText,
+          sources: sources,
+          provider,
+          model
+        });
       }
 
       return new Response('Not Found', { status: 404 });
