@@ -1,3 +1,10 @@
+#
+.env
+.env.production
+.env.staging
+.env.local
+.env.test
+
 # Logs
 logs
 *.log
