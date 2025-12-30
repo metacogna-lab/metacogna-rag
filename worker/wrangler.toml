@@ -7,6 +7,7 @@ routes = [
   { pattern = "api.metacogna.ai/*", zone_name = "metacogna.ai" }
 ]
 
+
 # --- AI BINDING ---
 [ai]
 binding = "AI"
@@ -34,18 +35,29 @@ bucket_name = "metacogna-vault"
 OPENAI_API_BASE = "https://openrouter.ai/api/v1"
 ENVIRONMENT = "production"
 SERVICE_NAME = "metacogna"
-API_BASE_URL = "https://api.metacogna.ai"
+API_BASE_URL = "https://web.metacogna.ai"
 
 # --- SECRETS (Set via: wrangler secret put <NAME>) ---
 # These should be set as secrets, not in this file:
-# GOOGLE_API_KEY - Google Gemini API key (optional, for Google provider)
+# GEMINI_API_KEY - Google Gemini API key (optional, for Google provider)
 # OPENAI_API_KEY - OpenAI API key (optional, for OpenAI provider)
 # ANTHROPIC_API_KEY - Anthropic API key (optional, for Anthropic provider)
 # LANGFUSE_PUBLIC_KEY - Langfuse public key (optional)
 # LANGFUSE_SECRET_KEY - Langfuse secret key (optional)
 
 
-
-# --- OBSERVABILITY (Optional) ---
+# ---- OBSERVABILITY (DEBUG) ---- #
 [observability]
+[observability.logs]
 enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+level = "debug"
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
+sampling_rate = 1
+

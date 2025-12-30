@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'import.meta.env.BASE_API_URL': JSON.stringify(process.env.BASE_API_URL || process.env.API_BASE_URL),
-    'import.meta.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || process.env.BASE_API_URL),
     // Polyfill for some libraries that expect process.env
     'process.env': process.env
   },
