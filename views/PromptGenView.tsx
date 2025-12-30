@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PaperCard, PaperInput, PaperButton, PaperBadge } from '../components/PaperComponents';
 import { Copy, Wand2, Loader2, Save, Trash2, Clock, Check, Layers, Target, AlertTriangle, Lightbulb, Zap } from 'lucide-react';
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AVAILABLE_MODELS } from '../constants';
 
 interface SavedPrompt {
@@ -98,7 +98,7 @@ const ProductAnalysisComponent: React.FC<{
         setLoading(true);
         try {
             const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
-            const ai = new GoogleGenAI({ apiKey });
+            const ai = new GoogleGenerativeAI({ apiKey });
             
             const context = selectedPrompts.map(p => p.content).join('\n---\n');
             let systemPrompt = '';

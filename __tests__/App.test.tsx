@@ -21,10 +21,10 @@ jest.mock('../views/KnowledgeGraphView', () => ({
   KnowledgeGraphView: () => <div data-testid="graph-view">Graph View Active</div>
 }));
 
-// 2. Mock GoogleGenAI SDK
+// 2. Mock GoogleGenerativeAI SDK
 // Prevent actual network calls to Google's API during tests.
-jest.mock('@google/genai', () => ({
-  GoogleGenAI: class {
+jest.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: class {
     models = {
       generateContent: jest.fn().mockResolvedValue({ text: "Mock AI Response" }),
       embedContent: jest.fn().mockResolvedValue({ embedding: { values: [0.1, 0.2, 0.3] } })

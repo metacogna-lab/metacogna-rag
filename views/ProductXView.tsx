@@ -7,7 +7,7 @@ import {
     ArrowRight, CheckCircle, AlertOctagon, RefreshCw, Send, BrainCircuit,
     ChevronRight, Play, Shield
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AppConfig } from '../types';
 
 // Map string icon names to Lucide components
@@ -58,7 +58,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
         
         try {
             const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-            const ai = new GoogleGenAI({ apiKey });
+            const ai = new GoogleGenerativeAI({ apiKey });
 
             // Gather context from previous steps
             let contextAccumulator = "";
@@ -98,7 +98,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
 
         try {
             const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-            const ai = new GoogleGenAI({ apiKey });
+            const ai = new GoogleGenerativeAI({ apiKey });
 
             const prompt = `${currentStep.validationPrompt}\n\nCONTENT TO AUDIT:\n${currentState.output}`;
 
@@ -139,7 +139,7 @@ export const ProductXView: React.FC<ProductXViewProps> = ({ config }) => {
                 
                 try {
                     const apiKey = (config.llm.apiKeys.google || process.env.API_KEY || '').trim();
-                    const ai = new GoogleGenAI({ apiKey });
+                    const ai = new GoogleGenerativeAI({ apiKey });
                     
                     // Re-run the step with the pivot prompt + existing context
                     // We assume context exists if we are jumping back

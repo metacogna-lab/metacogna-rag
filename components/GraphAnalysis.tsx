@@ -7,7 +7,7 @@ import {
   Bot, Sparkles, LayoutTemplate, Network, 
   Check, HardDrive
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface GraphAnalysisProps {
     data: GraphData;
@@ -59,7 +59,7 @@ export const GraphAnalysis: React.FC<GraphAnalysisProps> = ({ data, selectedNode
                 : `Graph contains ${data.nodes.length} nodes and ${data.links.length} links. Top entities: ${getTopConnections().map(c => c.label).join(', ')}.`;
 
             const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
-            const ai = new GoogleGenAI({ apiKey });
+            const ai = new GoogleGenerativeAI({ apiKey });
             
             const response = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',

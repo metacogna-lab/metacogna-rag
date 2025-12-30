@@ -193,7 +193,7 @@ export class LLMService {
                 if (provider === 'google') {
                     if (!apiKey) throw new Error("Google API Key is missing for embedding.");
                     
-                    const ai = new GoogleGenAI({ apiKey });
+                    const ai = new GoogleGenerativeAI({ apiKey });
                     const res = await ai.models.embedContent({
                         model: "text-embedding-004",
                         contents: [{ parts: [{ text }] }]

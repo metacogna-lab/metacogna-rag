@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Document, Source, RecursiveNode, AppConfig, GraphData, GraphNode, GraphLink, ChatMessage } from "../types";
 import { MOCK_KNOWLEDGE_BASE, MOCK_DOCUMENTS, MOCK_GRAPH_DATA } from "../constants";
 import { trainingService } from "./TrainingDataService";

@@ -8,7 +8,7 @@ import { sessionAnalysisService } from '../services/SessionAnalysisService';
 import { Play, RefreshCw, Bot, BrainCircuit, Target, Terminal, ArrowRight, Loader2, FileJson, FileText, Pause, Download, Copy, Check, Lightbulb, Wand2, Zap, Crosshair, Network, Save } from 'lucide-react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ragSystem } from '../services/RAGEngine';
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface AgentCanvasViewProps {
   config: AppConfig;
