@@ -2,6 +2,66 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Workflow
+
+**You are an expert in Full Stack LLM Applications and a Senior Software Engineer.** Traverse the front and back end to understand the structure, looking for areas of improvement.
+
+### Architecture Overview
+- **Frontend**: Vite React application
+- **Backend**: Cloudflare Worker (stateless, located in `./worker/`)
+- **Database**:
+  - D1 (structured/relational data, metadata)
+  - R2 (text data, file storage)
+- **State Tracking**: Record all state in `tasks/bridge.md` with timestamps
+- **Error Tracking**: Record errors in `tasks/errors.md`
+
+### Workflow Rules
+
+1. **Feature Branch Workflow**
+   - Always start a new feature branch for every feature
+   - Review state in `tasks/bridge.md` before beginning
+   - Update `tasks/bridge.md` at the end of each feature
+   - Commit and merge after completing each feature
+
+2. **State Management**
+   - Record current work and next steps in `tasks/bridge.md` with timestamps
+   - If user says "#UPDATE_STATE", update `tasks/bridge.md` immediately
+   - Be concise and clear about what you're working on
+
+3. **Error Handling**
+   - Review `tasks/errors.md` before starting new features
+   - Append new errors or breaking changes to `tasks/errors.md`
+
+4. **Testing**
+   - Write tests BEFORE starting a new feature
+   - Base tests on expected functionality, NOT existing code
+   - Test-driven development approach
+
+5. **Refactoring**
+   - Only perform non-destructive refactors that add to the site
+   - Work in phases (called features) to break down work
+   - Understand how frontend and backend interact before making changes
+
+### Data Architecture
+
+**Database Strategy:**
+- Every entity needs a schema and a UUID
+- Text data stored in R2
+- Metadata and links stored in D1
+- Link D1 objects with R2 text via UUIDs
+- Each user gets a UUID and a folder in D1
+
+**User Management:**
+- Admin user: `sunyata` (password stored as hash)
+- New users can only be added by admin through signup workflow
+- Guests have rate-limited, query-limited access without persistence
+- Only user data is stored (no guest persistence)
+
+**Backend Integration:**
+- Ensure endpoint reuse for different tasks
+- LLM tasks handled by chat endpoint
+- Supervisor agent has separate logic
+
 ## Project Overview
 
 **Pratejra RAG** is a production-ready RAG (Retrieval-Augmented Generation) system with multi-agent orchestration, knowledge graph visualization, and observability. The application features:
@@ -338,6 +398,65 @@ When Langfuse is configured:
 - Session context is captured
 - Performance metrics are logged
 - Training data is auto-collected
+
+## Feature Requirements
+
+### Backend Features (Cloudflare Worker - `./worker/`)
+
+**Signup Workflow:**
+- Create `/signup/{}` endpoint in Worker
+- Collect: Name, Email, Password, Goals, Initial files (.md or .pdf)
+- Support multiple file uploads
+- Generate UUID for each new user
+- Create user folder in D1
+- Hash passwords before storage
+
+**Goal Summarization:**
+- Function to review user UUID goals
+- Summarize goals using unique SYSTEM_PROMPT
+- Store summaries in R2 database
+
+**Endpoint Integration:**
+- Ensure endpoint reuse across different tasks
+- LLM tasks handled by chat endpoint
+- Supervisor agent has dedicated logic
+
+### Frontend Features (Vite React)
+
+**Signup Workflow:**
+- Connect Signup button to `/signup/{}` endpoint
+- Display instructions: "Goals are for the MetaCogna agent to monitor"
+- Multi-file upload support
+- Form validation and user feedback
+
+**UI/UX Improvements:**
+- Populate all menus (Prompt Library, Agent Workspace)
+- Add Submit button to Model Selection component
+- Add Submit button to API Keys configuration
+- Show metadata when hovering over sources in File Upload
+- Maintain documents in Document Store
+- Label files more intuitively
+
+**Ingestion Pipeline:**
+- Check pipeline is running
+- Show phase changes on UI
+- Validate metadata extraction and storage
+
+**Semantic Engine:**
+- Idea Decomposition
+- NER (Node extraction - Central entities)
+
+**ProductX Engine:**
+- Update API layout for workflow access
+- Trigger Meta Cognitive Test (Supervisor)
+
+**Configuration:**
+- Update to latest model list from providers
+- Prompting Knowledge Graph Submit
+- Prompt Engineering Lab - Reuse model selector
+
+**Deployment:**
+- Fix all deployment and configuration scripts after completing tasks above
 
 ## Common Development Tasks
 
