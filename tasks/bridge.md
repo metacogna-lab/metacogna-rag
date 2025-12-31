@@ -2,6 +2,113 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 08:00 UTC] - Feature 3.6: Prompt Engineering Lab Improvements Complete
+
+**Completed:**
+- ✅ Created PROMPT_TEMPLATES constant with 3 production-ready templates
+- ✅ Added template selector UI with 3-column grid in Configuration card
+- ✅ Implemented handleTemplateSelect() to load template content
+- ✅ Implemented insertVariable() function for cursor-position variable injection
+- ✅ Added variable interpolation buttons (context, query, code, focus, goal)
+- ✅ Added "Clear Template" button when template is selected
+
+**Changes Made:**
+- `views/PromptGenView.tsx` - Template library and variable interpolation system
+
+**Template Library (3 Templates):**
+
+**1. RAG Query Template:**
+- Icon: FileText
+- Description: "Optimized for retrieval-augmented generation"
+- Variables: {{context}}, {{query}}
+- Purpose: Expert research assistant with knowledge base access
+- Structure: Role, Context, User Query, Task (4 steps), Constraints (4 rules)
+- Tone: Professional, citation-focused, concise
+
+**2. Code Review Template:**
+- Icon: Code
+- Description: "Comprehensive code analysis and suggestions"
+- Variables: {{code}}, {{focus}}
+- Purpose: Senior software engineer code review
+- Structure: Code to Review, Review Focus, Task (5 areas), Output Format, Tone
+- Areas: Correctness, Security, Performance, Maintainability, Best Practices
+- Output: Assessment + prioritized issues + line references + examples
+
+**3. Goal Analysis Template:**
+- Icon: Brain
+- Description: "Strategic goal breakdown and roadmap"
+- Variables: {{goal}}, {{context}}
+- Purpose: Strategic planner for goal decomposition
+- Structure: User Goal, Context, Task (6 steps), Output Structure, Approach
+- Output Structure: Goal Summary, Immediate Actions, Short-term, Long-term, Risks
+- Approach: Specific, actionable, realistic
+
+**Variable Interpolation System:**
+
+**Available Variables:**
+- {{context}} - Used in RAG Query, Goal Analysis
+- {{query}} - Used in RAG Query
+- {{code}} - Used in Code Review
+- {{focus}} - Used in Code Review
+- {{goal}} - Used in Goal Analysis
+
+**insertVariable() Function:**
+```typescript
+const insertVariable = (variable: string) => {
+  const cursorPos = (document.activeElement as HTMLTextAreaElement)?.selectionStart || inputText.length;
+  const newText = inputText.slice(0, cursorPos) + `{{${variable}}}` + inputText.slice(cursorPos);
+  setInputText(newText);
+};
+```
+
+**Behavior:**
+- Detects cursor position in active textarea
+- Inserts {{variable}} at cursor position (or end if not focused)
+- Supports dynamic variable insertion during prompt editing
+- Works with both manual typing and template loading
+
+**UI Components:**
+
+**Template Selector (Configuration Card):**
+- 3-column grid layout (responsive: 1 col on mobile, 3 on desktop)
+- Each template button shows: icon, name, description
+- Selected state: Accent border + accent/10 background
+- Hover state: Accent border + gray-50 background
+- "Clear Template" button appears when template is selected (top-right)
+
+**Variable Interpolation Buttons (Input Strategy Card):**
+- 5 buttons for common variables
+- Monospace font for variable names
+- Border: gray-200, Hover: accent border + accent/10 background
+- Displays as: {{context}}, {{query}}, etc.
+- Located below textarea, above SemanticPromptGrouper
+
+**User Workflow:**
+
+**Option 1: Start from Template**
+1. User selects template from Configuration card
+2. Template content loads into textarea
+3. User edits template as needed
+4. User clicks variable buttons to add more placeholders
+5. User clicks "Generate Prompt" to optimize with Gemini
+
+**Option 2: Insert Variables into Custom Prompt**
+1. User types custom prompt in textarea
+2. User clicks variable interpolation buttons to insert {{placeholders}}
+3. User positions cursor, clicks button → variable inserted at cursor
+4. User clicks "Generate Prompt" to optimize
+
+**Technical Notes:**
+- Templates use markdown-style formatting (**, lists, sections)
+- All templates follow [Role] → [Context/Input] → [Task] → [Output] → [Constraints/Tone] structure
+- Variable insertion preserves cursor position and selection state
+- Templates designed for production RAG, code review, goal planning workflows
+- selectedTemplate state tracks active template (empty string = no template)
+
+**Next Feature:** Sprint 4 Complete (6/6 features). Sprint 5: Testing & Documentation (Features 4.1-4.2)
+
+---
+
 ## [2025-12-31 07:50 UTC] - Feature 3.5: Ingestion Pipeline UI Updates Complete
 
 **Completed:**

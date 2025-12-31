@@ -429,7 +429,7 @@ export const PromptGenView: React.FC = () => {
             <div className="space-y-4">
                  <div className="space-y-2">
                      <p className="text-xs font-bold uppercase text-gray-500">Target Model</p>
-                     <select 
+                     <select
                         value={targetModel}
                         onChange={(e) => setTargetModel(e.target.value)}
                         className="w-full p-2 border-2 border-ink rounded-sm font-sans bg-white text-ink focus:ring-2 focus:ring-accent outline-none text-sm"
@@ -439,14 +439,14 @@ export const PromptGenView: React.FC = () => {
                        ))}
                      </select>
                  </div>
-                 
+
                  <div>
                     <label className="flex justify-between text-xs font-bold uppercase text-gray-500 mb-2">
                       Temperature <span>{temperature}</span>
                     </label>
-                    <input 
-                      type="range" 
-                      min="0" max="1" step="0.1" 
+                    <input
+                      type="range"
+                      min="0" max="1" step="0.1"
                       value={temperature}
                       onChange={(e) => setTemperature(parseFloat(e.target.value))}
                       className="w-full accent-accent h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -457,13 +457,13 @@ export const PromptGenView: React.FC = () => {
             <div className="space-y-2">
                  <p className="text-xs font-bold uppercase text-gray-500">Optimization Mode</p>
                  <div className="flex flex-col gap-2 h-full">
-                   <button 
+                   <button
                     onClick={() => setMode('precise')}
                     className={`flex-1 py-2 text-xs font-bold border-2 transition-all flex items-center justify-center ${mode === 'precise' ? 'border-ink bg-ink text-white' : 'border-gray-200 text-gray-500 hover:border-ink'}`}
                    >
                      PRECISE
                    </button>
-                   <button 
+                   <button
                     onClick={() => setMode('creative')}
                     className={`flex-1 py-2 text-xs font-bold border-2 transition-all flex items-center justify-center ${mode === 'creative' ? 'border-ink bg-ink text-white' : 'border-gray-200 text-gray-500 hover:border-ink'}`}
                    >
@@ -472,17 +472,67 @@ export const PromptGenView: React.FC = () => {
                  </div>
             </div>
          </div>
+
+         {/* Template Library Selector */}
+         <div className="mt-6 pt-6 border-t border-gray-200">
+           <div className="flex items-center justify-between mb-3">
+             <p className="text-xs font-bold uppercase text-gray-500">Prompt Template Library</p>
+             {selectedTemplate && (
+               <button
+                 onClick={() => handleTemplateSelect('')}
+                 className="text-xs text-red-500 hover:text-red-700 font-bold"
+               >
+                 Clear Template
+               </button>
+             )}
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+             {Object.entries(PROMPT_TEMPLATES).map(([key, template]) => (
+               <button
+                 key={key}
+                 onClick={() => handleTemplateSelect(key as keyof typeof PROMPT_TEMPLATES)}
+                 className={`p-3 border-2 rounded-sm transition-all text-left ${
+                   selectedTemplate === key
+                     ? 'border-accent bg-accent/10'
+                     : 'border-gray-200 hover:border-accent hover:bg-gray-50'
+                 }`}
+               >
+                 <div className="flex items-center gap-2 mb-1">
+                   {template.icon}
+                   <span className="text-sm font-bold text-ink">{template.name}</span>
+                 </div>
+                 <p className="text-xs text-gray-500">{template.description}</p>
+               </button>
+             ))}
+           </div>
+         </div>
       </PaperCard>
 
       {/* 2. Input Strategy - Below Parameters */}
       <PaperCard title="Input Strategy">
-        <textarea 
+        <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           className="w-full h-32 p-4 border-2 border-gray-200 bg-white text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none font-sans text-sm"
           placeholder="Describe what you want the LLM to do (e.g., 'Summarize legal contracts emphasizing liabilities')..."
         ></textarea>
-        
+
+        {/* Variable Interpolation Buttons */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-xs font-bold uppercase text-gray-500 mb-2">Insert Variables</p>
+          <div className="flex flex-wrap gap-2">
+            {['context', 'query', 'code', 'focus', 'goal'].map((variable) => (
+              <button
+                key={variable}
+                onClick={() => insertVariable(variable)}
+                className="px-3 py-1 text-xs font-mono font-bold bg-white border-2 border-gray-200 text-gray-600 hover:border-accent hover:bg-accent/10 hover:text-accent transition-all rounded-sm"
+              >
+                {`{{${variable}}}`}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <SemanticPromptGrouper 
             prompts={savedPrompts} 
             query={inputText} 
