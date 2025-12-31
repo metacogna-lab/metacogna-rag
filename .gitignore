@@ -5,6 +5,7 @@
 .env.local
 .env.test
 workers.env
+test-results/
 
 # Logs
 logs
