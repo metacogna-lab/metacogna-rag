@@ -2,6 +2,56 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:25 UTC] - Feature 2.4: Admin-Only UI Gates Complete
+
+**Completed:**
+- ✅ Added SIGNUP to ViewState enum in types.ts
+- ✅ Extended User interface with email, name, goals, isAdmin fields
+- ✅ Updated App.tsx to track isAdmin state from user session
+- ✅ Modified App.tsx to pass isAdmin prop to Layout component
+- ✅ Added SIGNUP view case to renderView() switch statement
+- ✅ Updated LayoutProps interface to accept isAdmin boolean
+- ✅ Added UserPlus icon import to Layout.tsx
+- ✅ Added conditional "Create User" button in Layout sidebar footer
+- ✅ Button only visible when isAdmin === true
+
+**Changes Made:**
+- `types.ts` - Added SIGNUP to ViewState enum, extended User interface
+- `App.tsx` - Added isAdmin state, integrated SignupView routing
+- `components/Layout.tsx` - Added isAdmin prop, conditional Create User button
+
+**Technical Notes:**
+- Admin detection: Checks `user.isAdmin === 1` (SQLite boolean)
+- Button placement: Footer section between Settings and Sign Out
+- Navigation trigger: `setView(ViewState.SIGNUP)` on click
+- UI consistency: Uses SidebarItem component with UserPlus icon
+- Security: No client-side checks can bypass server-side admin validation
+
+**UI/UX Features:**
+- "Create User" button appears only for admin users
+- Consistent styling with other SidebarItem components
+- Proper active state when SIGNUP view is selected
+- Expandable sidebar shows full "Create User" label
+- Collapsed sidebar shows icon with tooltip on hover
+
+**Admin Flow:**
+1. Admin logs in → isAdmin state set to true
+2. "Create User" button appears in sidebar footer
+3. Admin clicks → navigates to SignupView modal
+4. Admin fills form and submits
+5. On success → navigates back to LANDING view
+6. System log records successful user creation
+
+**Breaking Changes:**
+- Layout component now requires isAdmin prop
+- App.tsx must pass isAdmin to Layout (enforced by TypeScript)
+
+**Next Phase:** Sprint 4 - Frontend Enhancements (6 features)
+
+**Sprint 3 Status:** Frontend Auth Migration (4/4 features complete) ✅
+
+---
+
 ## [2025-12-31 07:20 UTC] - Feature 2.3: Admin-Only Signup UI Complete
 
 **Completed:**

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { ViewState } from '../types';
-import { 
-  LayoutGrid, 
-  MessageSquare, 
-  Network, 
-  Terminal, 
-  Settings, 
+import {
+  LayoutGrid,
+  MessageSquare,
+  Network,
+  Terminal,
+  Settings,
   ChevronRight,
   ChevronLeft,
   Cpu,
@@ -14,7 +14,8 @@ import {
   Bot,
   Activity,
   LogOut,
-  BrainCircuit
+  BrainCircuit,
+  UserPlus
 } from 'lucide-react';
 import { authService } from '../services/AuthService';
 import { SupervisorWidget } from './SupervisorWidget';
@@ -26,6 +27,7 @@ interface LayoutProps {
   setView: (view: ViewState) => void;
   children: React.ReactNode;
   config: AppConfig; // Pass config for Supervisor
+  isAdmin: boolean; // Admin status for UI gates
   onLogout: () => void;
 }
 
@@ -57,7 +59,7 @@ const SidebarItem: React.FC<{
   </button>
 );
 
-export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, config, onLogout }) => {
+export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, config, isAdmin, onLogout }) => {
   const [expanded, setExpanded] = useState(false);
   const user = authService.getCurrentUser();
 
@@ -181,14 +183,23 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
         {/* Footer */}
         <div className="p-3 border-t-2 border-ink bg-surface flex flex-col gap-2">
-          <SidebarItem 
-             label="Settings" 
-             icon={<Settings size={22} />} 
+          <SidebarItem
+             label="Settings"
+             icon={<Settings size={22} />}
              active={currentView === ViewState.SETTINGS}
              onClick={() => setView(ViewState.SETTINGS)}
              expanded={expanded}
           />
-          <button 
+          {isAdmin && (
+            <SidebarItem
+               label="Create User"
+               icon={<UserPlus size={22} />}
+               active={currentView === ViewState.SIGNUP}
+               onClick={() => setView(ViewState.SIGNUP)}
+               expanded={expanded}
+            />
+          )}
+          <button
             onClick={onLogout}
             className="flex items-center gap-4 p-3 w-full text-red-500 hover:bg-red-50 rounded-sm transition-colors"
             title="Sign Out"

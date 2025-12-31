@@ -17,7 +17,8 @@ export enum ViewState {
   MY_PROFILE = 'MY_PROFILE',
   SETTINGS = 'SETTINGS',
   AGENT_CANVAS = 'AGENT_CANVAS',
-  CONSOLE = 'CONSOLE'
+  CONSOLE = 'CONSOLE',
+  SIGNUP = 'SIGNUP'
 }
 
 export interface GraphNode {
@@ -105,7 +106,11 @@ export interface AnalyzedSession {
 export interface User {
   id: string; // UUID
   username: string;
+  email?: string;
+  name?: string;
   passwordHash: string;
+  goals?: string;
+  isAdmin?: number; // 0 or 1 (SQLite boolean)
   createdAt: number;
   lastLogin: number;
   preferences?: {
