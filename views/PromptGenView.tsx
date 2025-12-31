@@ -1,9 +1,94 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { PaperCard, PaperInput, PaperButton, PaperBadge } from '../components/PaperComponents';
-import { Copy, Wand2, Loader2, Save, Trash2, Clock, Check, Layers, Target, AlertTriangle, Lightbulb, Zap } from 'lucide-react';
+import { Copy, Wand2, Loader2, Save, Trash2, Clock, Check, Layers, Target, AlertTriangle, Lightbulb, Zap, Code, FileText, Brain } from 'lucide-react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AVAILABLE_MODELS } from '../constants';
+
+// Prompt Template Library
+const PROMPT_TEMPLATES = {
+  'rag-query': {
+    name: 'RAG Query',
+    icon: <FileText size={14}/>,
+    description: 'Optimized for retrieval-augmented generation',
+    content: `You are an expert research assistant with access to a knowledge base.
+
+**Role**: Answer user queries using ONLY the provided context from the knowledge base.
+
+**Context**:
+{{context}}
+
+**User Query**:
+{{query}}
+
+**Task**:
+1. Analyze the provided context thoroughly
+2. Extract relevant information that directly addresses the query
+3. Synthesize a clear, accurate answer
+4. Cite specific sources from the context when possible
+
+**Constraints**:
+- Only use information from the provided context
+- If the context doesn't contain relevant information, say "I don't have enough information to answer this"
+- Be concise but complete
+- Use proper citations [Source: ...]`
+  },
+  'code-review': {
+    name: 'Code Review',
+    icon: <Code size={14}/>,
+    description: 'Comprehensive code analysis and suggestions',
+    content: `You are a senior software engineer performing a code review.
+
+**Code to Review**:
+{{code}}
+
+**Review Focus**: {{focus}}
+
+**Task**:
+1. **Correctness**: Identify bugs, logic errors, and edge cases
+2. **Security**: Flag potential security vulnerabilities
+3. **Performance**: Suggest optimization opportunities
+4. **Maintainability**: Assess code clarity, documentation, and structure
+5. **Best Practices**: Check adherence to language-specific conventions
+
+**Output Format**:
+- Start with an overall assessment (Approve / Request Changes / Needs Work)
+- List issues by priority (Critical / High / Medium / Low)
+- Provide specific line references when possible
+- Suggest concrete improvements with code examples
+
+**Tone**: Professional, constructive, and specific`
+  },
+  'goal-analysis': {
+    name: 'Goal Analysis',
+    icon: <Brain size={14}/>,
+    description: 'Strategic goal breakdown and roadmap',
+    content: `You are a strategic planner analyzing user goals and objectives.
+
+**User Goal**:
+{{goal}}
+
+**Context**:
+{{context}}
+
+**Task**:
+1. **Clarify the Goal**: Rephrase the goal to ensure understanding
+2. **Break Down**: Decompose into specific, measurable sub-goals
+3. **Prioritize**: Rank sub-goals by impact and feasibility
+4. **Timeline**: Suggest realistic timeframes for each phase
+5. **Dependencies**: Identify prerequisites and blockers
+6. **Success Metrics**: Define clear criteria for measuring progress
+
+**Output Structure**:
+- Goal Summary (1-2 sentences)
+- Immediate Actions (0-1 month)
+- Short-term Milestones (1-3 months)
+- Long-term Objectives (3-12 months)
+- Key Risks and Mitigation Strategies
+
+**Approach**: Be specific, actionable, and realistic`
+  }
+};
 
 interface SavedPrompt {
   id: string;
@@ -220,7 +305,8 @@ export const PromptGenView: React.FC = () => {
   const [mode, setMode] = useState<'precise' | 'creative'>('precise');
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
   const [justSaved, setJustSaved] = useState(false);
-  
+  const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROMPT_TEMPLATES | ''>('');
+
   // Analysis State
   const [analysisPrompts, setAnalysisPrompts] = useState<SavedPrompt[]>([]);
 
@@ -315,6 +401,19 @@ export const PromptGenView: React.FC = () => {
 
   const handleDelete = (id: string) => {
     setSavedPrompts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleTemplateSelect = (templateKey: keyof typeof PROMPT_TEMPLATES | '') => {
+    setSelectedTemplate(templateKey);
+    if (templateKey) {
+      setInputText(PROMPT_TEMPLATES[templateKey].content);
+    }
+  };
+
+  const insertVariable = (variable: string) => {
+    const cursorPos = (document.activeElement as HTMLTextAreaElement)?.selectionStart || inputText.length;
+    const newText = inputText.slice(0, cursorPos) + `{{${variable}}}` + inputText.slice(cursorPos);
+    setInputText(newText);
   };
 
   return (
