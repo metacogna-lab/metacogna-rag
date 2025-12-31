@@ -2,6 +2,132 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 08:30 UTC] - Feature 4.2: Update Documentation Complete
+
+**Completed:**
+- ✅ Completely rewrote README.md with comprehensive project documentation
+- ✅ Created deployment/API_REFERENCE.md with full API documentation (NEW)
+- ✅ Created USER_GUIDE.md with admin-only access model guide (NEW)
+- ✅ Updated deployment/DEPLOYMENT.md with R2 bucket setup instructions
+
+**Changes Made:**
+- `README.md` - Complete rewrite (314 lines)
+- `deployment/API_REFERENCE.md` - API reference documentation (NEW, 600+ lines)
+- `USER_GUIDE.md` - End-user documentation (NEW, 450+ lines)
+- `deployment/DEPLOYMENT.md` - Added Step 4: Create R2 Bucket, renumbered remaining steps
+
+**README.md Updates:**
+
+**New Sections:**
+- Overview with key features
+- Architecture (Backend + Frontend + Testing)
+- Features breakdown (Auth, Documents, Pipeline, Prompt Lab, Settings)
+- Quick Start guide
+- Project structure
+- User workflows (Admin signup, User upload, Prompt engineering)
+- Admin-Only Features table
+- API Endpoints summary
+- Configuration (LLM providers)
+- Development scripts
+- Sprints completed (20 features across 5 sprints)
+- Contributing guidelines
+
+**Key Highlights:**
+- Admin-only user management
+- Worker authentication (SHA-256, 7-day cookies)
+- R2 document storage
+- 4-stage pipeline visualization
+- Prompt Engineering Lab with templates
+- Latest AI models (GPT-4o, Claude 3.5, Gemini 2.0)
+
+**deployment/API_REFERENCE.md (NEW)**:
+
+**Endpoints Documented:**
+- POST /api/auth/login - User login
+- **POST /api/signup** - Admin-only user creation (NEW)
+- POST /api/ingest - Document upload (R2 storage)
+- GET /api/documents - List user documents
+- POST /api/documents/reindex - Maintenance operation
+- DELETE /api/documents/purge-errors - Error cleanup
+- GET /api/search - Semantic search
+- GET /api/graph - Knowledge graph
+
+**Data Models:**
+- User (with isAdmin, goals, goalsSummary, passwordHash)
+- Document (with r2Key, status, progress, chunkCount)
+- GraphNode (with type, properties, documentId)
+- GraphEdge (with relation, properties)
+
+**Request/Response Examples:**
+- Full FormData examples for /api/signup
+- Bearer token authentication format
+- Session cookie structure
+- R2 key format: users/{userId}/documents/{docId}-{filename}
+- Pipeline stages (Chunking, Embedding, Graph, Finalizing)
+
+**Error Codes:**
+- 200 OK
+- 400 Bad Request
+- 401 Unauthorized
+- 403 Forbidden (non-admin)
+- 404 Not Found
+- 500 Internal Server Error
+
+**USER_GUIDE.md (NEW)**:
+
+**Sections:**
+- Getting Started (no self-registration)
+- Access Control Model (admin-only signup)
+- Authentication (login process, session management, SHA-256)
+- User Roles (Administrator vs Standard User)
+- Admin Workflows (Creating new users with goals + files)
+- User Workflows (Login, Upload, Search, Graph, Prompt Lab, Settings, Maintenance)
+- Features Guide (Paper UI, Pipeline stages, Metadata system)
+- Troubleshooting (Login, Upload, Search, Graph issues)
+- FAQ (General, Documents, Search/Graph, Prompt Lab, Admin)
+
+**Key Content:**
+- Why admin-only access model (security, quality control, personalization)
+- Session duration: 7 days
+- Password security: SHA-256 hashing
+- Admin capabilities table (what admins can do vs non-admins)
+- Step-by-step user workflows with screenshots described
+- Metadata tooltip system (hover to view full details)
+- Pipeline stages visualization (4 color-coded stages)
+- Prompt templates (RAG Query, Code Review, Goal Analysis)
+- Variable interpolation ({{context}}, {{query}}, etc.)
+
+**deployment/DEPLOYMENT.md Updates:**
+
+**New Step 4: Create R2 Bucket**
+- Command: bun wrangler r2 bucket create metacogna-vault
+- Verify: bun wrangler r2 bucket list
+- Update wrangler.toml with R2 binding
+- Binding name: METACOGNA_VAULT (must match worker code)
+- R2 key format: users/{userId}/documents/{documentId}-{filename}
+- Benefits: No D1 size limits, scalable storage, lower costs
+
+**Updated Steps:**
+- Step 5: Create Vector Index (was Step 4)
+- Step 6: Initialize Database Schema (was Step 5)
+- Step 7: Configure Secrets (was Step 6)
+- Step 8: Test Worker Locally (was Step 7)
+- Step 9: Deploy to Production (was Step 8)
+- Step 10: Verify Deployment (was Step 9)
+
+**Sprint 5: Complete (2/2 features)**
+
+**All 20 Features Across 5 Sprints Implemented:**
+- Sprint 1: Backend Foundation (4/4) ✅
+- Sprint 2: Signup Workflow (4/4) ✅
+- Sprint 3: Frontend Auth Migration (4/4) ✅
+- Sprint 4: Frontend Enhancements (6/6) ✅
+- Sprint 5: Testing & Documentation (2/2) ✅
+
+**Project Status: Production Ready**
+
+---
+
 ## [2025-12-31 08:15 UTC] - Feature 4.1: E2E Test Suite Complete
 
 **Completed:**

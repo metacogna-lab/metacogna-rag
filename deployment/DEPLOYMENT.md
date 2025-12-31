@@ -103,7 +103,50 @@ database_name = "pratejra-db"
 database_id = "INSERT_YOUR_D1_ID_HERE"  # ← Replace with actual ID from Step 2
 ```
 
-### Step 4: Create Vector Index
+### Step 4: Create R2 Bucket
+
+**R2** is Cloudflare's object storage for document content (full text, metadata, files).
+
+```bash
+# Create R2 bucket
+bun wrangler r2 bucket create metacogna-vault
+```
+
+**Expected Output:**
+```
+✅ Successfully created bucket 'metacogna-vault'
+```
+
+**Verify creation:**
+```bash
+# List all R2 buckets
+bun wrangler r2 bucket list
+```
+
+**Update wrangler.toml** with R2 binding:
+
+Open `wrangler.toml` and add the R2 bucket binding:
+
+```toml
+[[r2_buckets]]
+binding = "METACOGNA_VAULT"  # Must match worker/src/index.ts Env interface
+bucket_name = "metacogna-vault"
+```
+
+**IMPORTANT**: The `binding` name must be `METACOGNA_VAULT` (all caps) to match the Worker code.
+
+**R2 Usage**:
+- **Document Content**: Full document text stored in R2 (not D1)
+- **R2 Key Format**: `users/{userId}/documents/{documentId}-{filename}`
+- **D1 Metadata**: Document preview (first 500 chars) + r2Key reference
+- **Benefits**: No D1 size limits, scalable storage, lower costs
+
+**Example R2 Key**:
+```
+users/user-20250101-abc123/documents/doc-xyz789-research-paper.pdf
+```
+
+### Step 5: Create Vector Index
 
 ```bash
 # Create Vectorize index
@@ -127,7 +170,7 @@ Configuration:
 bun run vector:info
 ```
 
-### Step 5: Initialize Database Schema
+### Step 6: Initialize Database Schema
 
 ```bash
 # Run schema initialization
@@ -157,7 +200,7 @@ bun wrangler d1 execute pratejra-db --command "SELECT name FROM sqlite_master WH
 - graph_nodes
 - graph_edges
 
-### Step 6: Configure Secrets (Optional)
+### Step 7: Configure Secrets (Optional)
 
 If using Langfuse observability:
 
@@ -173,7 +216,7 @@ bun wrangler secret put LANGFUSE_SECRET_KEY
 
 **Note:** Secrets are encrypted and not visible in wrangler.toml
 
-### Step 7: Test Worker Locally (Optional)
+### Step 8: Test Worker Locally (Optional)
 
 ```bash
 # Start local development server
@@ -194,7 +237,7 @@ curl -X POST http://localhost:8787/api/search \
   -d '{"query": "test query", "topK": 5}'
 ```
 
-### Step 8: Deploy to Production
+### Step 9: Deploy to Production
 
 ```bash
 # Build frontend and deploy worker
@@ -216,7 +259,7 @@ Published pratejra-rag-worker (x.xx sec)
 Current Deployment ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-### Step 9: Verify Deployment
+### Step 10: Verify Deployment
 
 ```bash
 # Tail real-time logs
