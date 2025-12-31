@@ -2,6 +2,43 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:10 UTC] - Feature 2.1: Remove localStorage Auth Complete
+
+**Completed:**
+- ✅ Removed all localStorage methods from AuthService
+- ✅ Deleted loadUsers(), saveUsers(), seedAdmin() methods
+- ✅ Removed users array (private users: User[] = [])
+- ✅ Deleted register() method (now admin-only via /api/signup)
+- ✅ Updated login() to call Worker endpoint ONLY (no localStorage fallback)
+- ✅ Maintained currentUser state for session management
+- ✅ Kept cookie-based sessions (pratejra_session)
+- ✅ Preserved hash(), sanitizeInput(), validateUsername(), validatePassword()
+- ✅ Updated restoreSession() (temporary cookie trust until Worker validation endpoint)
+
+**Changes Made:**
+- `services/AuthService.ts` - Removed localStorage, Worker-only auth
+- `__tests__/AuthService.test.ts` - Specification tests for new auth flow
+
+**Technical Notes:**
+- BREAKING CHANGE: No localStorage usage
+- BREAKING CHANGE: register() method removed
+- BREAKING CHANGE: No hardcoded admin user (seedAdmin removed)
+- Login flow: sanitize → hash → POST /api/auth/login → create session
+- Session restore: Read cookie → (temp: trust until Worker validation ready)
+- Error handling: 401 → "Invalid credentials", Network → "Connection failed"
+
+**Breaking Changes:**
+- authService.register() no longer exists
+- All auth state comes from Worker API
+- Admin user must exist in D1 database (not localStorage)
+- Existing localStorage sessions will be invalid
+
+**Next Feature:** 2.2 - Guest Login UI (Remove Signup Button)
+
+**Sprint 3 Status:** Frontend Auth Migration (1/4 features complete)
+
+---
+
 ## [2025-12-31 07:00 UTC] - Feature 1.8: Update Ingest Endpoint for R2 Complete
 
 **Completed:**
