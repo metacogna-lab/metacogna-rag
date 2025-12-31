@@ -385,7 +385,12 @@ const MetadataTab: React.FC<{
     </div>
 );
 
-const StatsTab: React.FC<{ documents: Document[], config: AppConfig }> = ({ documents, config }) => {
+const StatsTab: React.FC<{
+    documents: Document[],
+    config: AppConfig,
+    onReindexAll: () => void,
+    onPurgeErrors: () => void
+}> = ({ documents, config, onReindexAll, onPurgeErrors }) => {
     const totalChunks = documents.reduce((acc, doc) => acc + (doc.chunkCount || 0), 0);
     const indexedDocs = documents.filter(d => d.status === 'indexed').length;
     const activeVault = config.vaults.find(v => v.id === config.activeVaultId);
@@ -483,6 +488,34 @@ const StatsTab: React.FC<{ documents: Document[], config: AppConfig }> = ({ docu
                         <Cpu size={14} className="text-gray-400"/>
                         <span className="text-xs font-mono text-gray-500">Est. Cost: <span className="text-ink font-bold">$0.04/mo</span></span>
                      </div>
+                </div>
+
+                {/* Maintenance Panel */}
+                <div className="p-4 bg-orange-50 border-2 border-orange-200 rounded-sm space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle size={16} className="text-orange-600"/>
+                        <h5 className="text-sm font-bold text-orange-900 uppercase tracking-wide">Document Store Maintenance</h5>
+                    </div>
+                    <p className="text-xs text-orange-700">
+                        Use these tools to maintain document store integrity and performance.
+                    </p>
+
+                    <div className="space-y-2 pt-2">
+                        <button
+                            onClick={onReindexAll}
+                            className="w-full flex items-center justify-center gap-2 p-3 bg-white hover:bg-orange-100 border-2 border-orange-300 text-orange-900 font-bold text-sm rounded-sm transition-colors"
+                        >
+                            <RefreshCw size={16}/>
+                            Reindex All Documents
+                        </button>
+                        <button
+                            onClick={onPurgeErrors}
+                            className="w-full flex items-center justify-center gap-2 p-3 bg-white hover:bg-red-100 border-2 border-red-300 text-red-900 font-bold text-sm rounded-sm transition-colors"
+                        >
+                            <Trash2 size={16}/>
+                            Purge Error Documents
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -627,6 +660,47 @@ export const UploadView: React.FC<UploadViewProps> = ({ documents, setDocuments,
     updateDocumentMetadata(selectedDocId, metaKey, metaValue);
     setMetaKey('');
     setMetaValue('');
+  };
+
+  // Maintenance Operations
+  const handleReindexAll = () => {
+    if (!window.confirm('Reindex all documents? This will reset processing status and re-run indexing for all documents.')) {
+      return;
+    }
+
+    setDocuments(prev => prev.map(doc => ({
+      ...doc,
+      status: 'processing' as const,
+      progress: 0,
+      chunkCount: 0
+    })));
+
+    // Simulate reindexing with mock progress
+    setTimeout(() => {
+      setDocuments(prev => prev.map(doc => ({
+        ...doc,
+        status: 'indexed' as const,
+        progress: 100,
+        chunkCount: Math.floor(Math.random() * 50) + 10
+      })));
+      alert('All documents reindexed successfully!');
+    }, 2000);
+  };
+
+  const handlePurgeErrors = () => {
+    const errorDocs = documents.filter(d => d.status === 'error');
+
+    if (errorDocs.length === 0) {
+      alert('No error documents to purge.');
+      return;
+    }
+
+    if (!window.confirm(`Purge ${errorDocs.length} error document(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDocuments(prev => prev.filter(doc => doc.status !== 'error'));
+    alert(`Purged ${errorDocs.length} error document(s).`);
   };
 
   // Delete Workflow
@@ -821,7 +895,12 @@ export const UploadView: React.FC<UploadViewProps> = ({ documents, setDocuments,
                         />
                     )}
                     {activeTab === 'stats' && (
-                        <StatsTab documents={documents} config={config} />
+                        <StatsTab
+                            documents={documents}
+                            config={config}
+                            onReindexAll={handleReindexAll}
+                            onPurgeErrors={handlePurgeErrors}
+                        />
                     )}
                 </div>
             </div>
