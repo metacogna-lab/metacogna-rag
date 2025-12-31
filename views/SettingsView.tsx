@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { PaperCard, PaperInput, PaperButton, PaperBadge } from '../components/PaperComponents';
 import { AppConfig, Vault, LLMProvider, LLMModelID, SystemPrompt, TrainingExample, AnalyzedSession } from '../types';
-import { 
-  HardDrive, Cloud, Shield, Server, Check, Plus, Trash2, 
+import {
+  HardDrive, Cloud, Shield, Server, Check, Plus, Trash2,
   Cpu, Key, Database, Settings as SettingsIcon, Edit2, Save, X, Globe, Folder, RefreshCw, Terminal, Sliders, AlertTriangle, Network, FileJson, Download, Table, BrainCircuit, List
 } from 'lucide-react';
 import { trainingService } from '../services/TrainingDataService';
 import { sessionAnalysisService } from '../services/SessionAnalysisService';
 import { PROVIDER_DEFAULT_MODELS, AVAILABLE_MODELS } from '../constants';
+import { detectApiKeySources, EnvDetectionResult } from '../lib/env-detection';
 
 interface SettingsViewProps {
   config: AppConfig;
@@ -39,11 +40,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
   const [analysisSessions, setAnalysisSessions] = useState<AnalyzedSession[]>([]);
   const [apiKeySaveSuccess, setApiKeySaveSuccess] = useState(false);
   const [apiKeySaveError, setApiKeySaveError] = useState('');
+  const [envDetection, setEnvDetection] = useState<Record<string, EnvDetectionResult>>({});
 
-  // Load Data
+  // Load Data & Detect Environment Variables
   useEffect(() => {
       if (activeTab === 'data') setTrainingData(trainingService.getAll());
       if (activeTab === 'analysis') setAnalysisSessions(sessionAnalysisService.getSessions());
+      if (activeTab === 'llm') setEnvDetection(detectApiKeySources());
   }, [activeTab]);
 
   const handleClearData = () => { if (window.confirm('Clear all?')) { trainingService.clear(); setTrainingData([]); } };
@@ -199,31 +202,97 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
                                  <h4 className="text-sm font-bold text-ink flex items-center gap-2"><Key size={14}/> API Credentials</h4>
                                  
                                  {config.llm.provider === 'openai' && (
-                                     <PaperInput 
-                                        type="password" 
-                                        label="OpenAI API Key" 
-                                        value={config.llm.apiKeys.openai} 
-                                        onChange={e => updateApiKey('openai', e.target.value)} 
-                                        placeholder="sk-..."
-                                     />
+                                     <div>
+                                         {envDetection['openai']?.isFromEnv ? (
+                                             <div className="space-y-2">
+                                                 <label className="text-xs font-bold uppercase text-gray-500 block">
+                                                     OpenAI API Key
+                                                 </label>
+                                                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-sm">
+                                                     <Check size={16} className="text-green-600"/>
+                                                     <span className="text-sm font-mono text-green-700">
+                                                         Loaded from Environment Variable
+                                                     </span>
+                                                     <span className="ml-auto text-xs text-green-600 font-bold">
+                                                         {envDetection['openai'].value.substring(0, 7)}...
+                                                     </span>
+                                                 </div>
+                                                 <p className="text-xs text-gray-500 italic">
+                                                     This API key is configured via environment variable and cannot be overridden.
+                                                 </p>
+                                             </div>
+                                         ) : (
+                                             <PaperInput
+                                                type="password"
+                                                label="OpenAI API Key"
+                                                value={config.llm.apiKeys.openai}
+                                                onChange={e => updateApiKey('openai', e.target.value)}
+                                                placeholder="sk-..."
+                                             />
+                                         )}
+                                     </div>
                                  )}
                                  {config.llm.provider === 'anthropic' && (
-                                     <PaperInput 
-                                        type="password" 
-                                        label="Anthropic API Key" 
-                                        value={config.llm.apiKeys.anthropic} 
-                                        onChange={e => updateApiKey('anthropic', e.target.value)} 
-                                        placeholder="sk-ant-..."
-                                     />
+                                     <div>
+                                         {envDetection['anthropic']?.isFromEnv ? (
+                                             <div className="space-y-2">
+                                                 <label className="text-xs font-bold uppercase text-gray-500 block">
+                                                     Anthropic API Key
+                                                 </label>
+                                                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-sm">
+                                                     <Check size={16} className="text-green-600"/>
+                                                     <span className="text-sm font-mono text-green-700">
+                                                         Loaded from Environment Variable
+                                                     </span>
+                                                     <span className="ml-auto text-xs text-green-600 font-bold">
+                                                         {envDetection['anthropic'].value.substring(0, 7)}...
+                                                     </span>
+                                                 </div>
+                                                 <p className="text-xs text-gray-500 italic">
+                                                     This API key is configured via environment variable and cannot be overridden.
+                                                 </p>
+                                             </div>
+                                         ) : (
+                                             <PaperInput
+                                                type="password"
+                                                label="Anthropic API Key"
+                                                value={config.llm.apiKeys.anthropic}
+                                                onChange={e => updateApiKey('anthropic', e.target.value)}
+                                                placeholder="sk-ant-..."
+                                             />
+                                         )}
+                                     </div>
                                  )}
                                  {config.llm.provider === 'google' && (
-                                     <PaperInput 
-                                        type="password" 
-                                        label="Google GenAI API Key" 
-                                        value={config.llm.apiKeys.google} 
-                                        onChange={e => updateApiKey('google', e.target.value)} 
-                                        placeholder="AIza..."
-                                     />
+                                     <div>
+                                         {envDetection['google']?.isFromEnv ? (
+                                             <div className="space-y-2">
+                                                 <label className="text-xs font-bold uppercase text-gray-500 block">
+                                                     Google GenAI API Key
+                                                 </label>
+                                                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-sm">
+                                                     <Check size={16} className="text-green-600"/>
+                                                     <span className="text-sm font-mono text-green-700">
+                                                         Loaded from Environment Variable
+                                                     </span>
+                                                     <span className="ml-auto text-xs text-green-600 font-bold">
+                                                         {envDetection['google'].value.substring(0, 7)}...
+                                                     </span>
+                                                 </div>
+                                                 <p className="text-xs text-gray-500 italic">
+                                                     This API key is configured via environment variable and cannot be overridden.
+                                                 </p>
+                                             </div>
+                                         ) : (
+                                             <PaperInput
+                                                type="password"
+                                                label="Google GenAI API Key"
+                                                value={config.llm.apiKeys.google}
+                                                onChange={e => updateApiKey('google', e.target.value)}
+                                                placeholder="AIza..."
+                                             />
+                                         )}
+                                     </div>
                                  )}
                                  {config.llm.provider === 'ollama' && (
                                      <PaperInput 
@@ -233,13 +302,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
                                      />
                                  )}
                                 {config.llm.provider === 'workers' && (
-                                    <PaperInput
-                                       type="password"
-                                       label="Cloudflare API Token (Optional)"
-                                       value={config.llm.apiKeys.workers || ''}
-                                       onChange={e => updateApiKey('workers', e.target.value)}
-                                       placeholder="Workers AI runs on your Cloudflare account..."
-                                    />
+                                    <div>
+                                        {envDetection['workers']?.isFromEnv ? (
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase text-gray-500 block">
+                                                    Cloudflare API Token
+                                                </label>
+                                                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-sm">
+                                                    <Check size={16} className="text-green-600"/>
+                                                    <span className="text-sm font-mono text-green-700">
+                                                        Loaded from Environment Variable
+                                                    </span>
+                                                    <span className="ml-auto text-xs text-green-600 font-bold">
+                                                        {envDetection['workers'].value.substring(0, 7)}...
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 italic">
+                                                    This API token is configured via environment variable and cannot be overridden.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <PaperInput
+                                               type="password"
+                                               label="Cloudflare API Token (Optional)"
+                                               value={config.llm.apiKeys.workers || ''}
+                                               onChange={e => updateApiKey('workers', e.target.value)}
+                                               placeholder="Workers AI runs on your Cloudflare account..."
+                                            />
+                                        )}
+                                    </div>
                                 )}
 
                                 {/* Success/Error Messages */}

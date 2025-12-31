@@ -1,31 +1,47 @@
 
 import React, { useState, useEffect } from 'react';
 import { Eye, Check, AlertTriangle, Lightbulb, X, Activity, Shield, BrainCircuit, Play } from 'lucide-react';
-import { supervisorService } from '../services/SupervisorService';
-import { SupervisorDecision, AppConfig } from '../types';
+import { SupervisorDecision } from '../types';
+import { useAppStore, selectAuth } from '../store';
 
-export const SupervisorWidget: React.FC<{ config: AppConfig }> = ({ config }) => {
+export const SupervisorWidget: React.FC = () => {
+    const { userId } = useAppStore(selectAuth);
     const [history, setHistory] = useState<SupervisorDecision[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
 
-    useEffect(() => {
-        const unsub = supervisorService.subscribe((data) => {
-            if (data.length > history.length) {
+    // Fetch decisions from Worker API
+    const fetchDecisions = async () => {
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`/api/supervisor/decisions?userId=${userId}`);
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const decisions = data.decisions || [];
+
+            if (decisions.length > history.length) {
                 setHasUnread(true);
             }
-            setHistory([...data]);
-        });
-        
-        // Start monitoring (using a dummy stream ID 'active' for now as the service handles checks)
-        // In a real scenario, we'd pass the actual active stream ID from context
-        supervisorService.startMonitoring(config, 'active_session');
 
-        return () => {
-            unsub();
-            supervisorService.stopMonitoring();
-        };
-    }, []);
+            setHistory(decisions);
+        } catch (err) {
+            console.error('[SupervisorWidget] Failed to fetch decisions:', err);
+        }
+    };
+
+    useEffect(() => {
+        if (!userId) return;
+
+        // Initial fetch
+        fetchDecisions();
+
+        // Poll every 30 seconds for new decisions
+        const intervalId = setInterval(fetchDecisions, 30000);
+
+        return () => clearInterval(intervalId);
+    }, [userId]);
 
     const toggleOpen = () => {
         setIsOpen(!isOpen);
@@ -125,12 +141,9 @@ export const SupervisorWidget: React.FC<{ config: AppConfig }> = ({ config }) =>
                     </div>
                     
                     <div className="p-2 bg-gray-50 border-t border-gray-200 text-center shrink-0">
-                        <button 
-                            onClick={() => supervisorService.analyzeSession(config, 'latest')}
-                            className="text-[10px] font-bold uppercase text-accent hover:underline flex items-center justify-center gap-1 w-full py-1"
-                        >
-                            <Activity size={10}/> Trigger Meta-Cognitive Check
-                        </button>
+                        <div className="text-[10px] text-gray-400 font-mono">
+                            {history.length} decision{history.length !== 1 ? 's' : ''} • Auto-monitoring active
+                        </div>
                     </div>
                 </div>
             )}

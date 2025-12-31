@@ -497,6 +497,99 @@ export default {
         });
       }
 
+      // --- SUPERVISOR: STATE CHANGE DETECTION ---
+      if (path === '/api/supervisor/state-change' && method === 'POST') {
+        const { userId, timestamp, documentCount, goalsHash } = await request.json() as any;
+
+        const lastSnapshot = await env.DB.prepare(
+          'SELECT * FROM user_state_snapshots WHERE userId = ? ORDER BY timestamp DESC LIMIT 1'
+        ).bind(userId).first();
+
+        let changePercentage = 0;
+        if (lastSnapshot) {
+          const docChange = Math.abs(documentCount - (lastSnapshot.documentCount || 0)) / Math.max(lastSnapshot.documentCount || 1, 1);
+          const goalsChanged = goalsHash !== lastSnapshot.goalsHash ? 0.3 : 0;
+          changePercentage = docChange + goalsChanged;
+        }
+
+        await env.DB.prepare(
+          'INSERT INTO user_state_snapshots (id, userId, timestamp, documentCount, goalsHash, changePercentage) VALUES (?, ?, ?, ?, ?, ?)'
+        ).bind(`snap-${userId}-${timestamp}`, userId, timestamp, documentCount, goalsHash, changePercentage).run();
+
+        return jsonResponse({ changePercentage, shouldTriggerSupervisor: changePercentage > 0.05 });
+      }
+
+      // --- SUPERVISOR: ANALYSIS ---
+      if (path === '/api/supervisor/analyze' && method === 'POST') {
+        const { userId, userGoals } = await request.json() as any;
+
+        const interactions = await env.DB.prepare(
+          'SELECT * FROM user_interaction_log WHERE userId = ? ORDER BY timestamp DESC LIMIT 20'
+        ).bind(userId).all();
+
+        const policies = await env.DB.prepare(
+          'SELECT * FROM supervisor_policies WHERE userId = ? ORDER BY lastApplied DESC LIMIT 10'
+        ).bind(userId).all();
+
+        const prompt = `SUPERVISOR ANALYSIS\nGoals: ${userGoals}\n\nRecent Actions: ${interactions.results.map((i: any) => i.actionType).join(', ')}\n\nOutput JSON with: type (inhibit/allow/request_guidance), confidenceScore (0-100), userMessage, reasoning`;
+
+        const aiResponse = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' }
+        });
+
+        const decision = JSON.parse(aiResponse.response || '{}');
+
+        await env.DB.prepare(
+          'INSERT INTO supervisor_decisions (id, userId, timestamp, decisionType, confidenceScore, userMessage, reasoning, displayMode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(
+          `dec-${userId}-${Date.now()}`,
+          userId,
+          Date.now(),
+          decision.type || 'allow',
+          decision.confidenceScore || 50,
+          decision.userMessage || '',
+          decision.reasoning || '',
+          (decision.confidenceScore || 50) < 70 ? 'toast' : 'widget'
+        ).run();
+
+        return jsonResponse({ success: true, decision });
+      }
+
+      // --- SUPERVISOR: LOG INTERACTION ---
+      if (path === '/api/interactions/log' && method === 'POST') {
+        const { userId, timestamp, viewState, actionType, actionTarget, actionPayload } = await request.json() as any;
+
+        await env.DB.prepare(
+          'INSERT INTO user_interaction_log (id, userId, timestamp, viewState, actionType, actionTarget, actionPayload) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).bind(`int-${userId}-${timestamp}`, userId, timestamp, viewState, actionType, actionTarget || null, actionPayload || null).run();
+
+        return jsonResponse({ success: true });
+      }
+
+      // --- SUPERVISOR: GET DECISIONS ---
+      if (path === '/api/supervisor/decisions' && method === 'GET') {
+        const userId = url.searchParams.get('userId');
+
+        const decisions = await env.DB.prepare(
+          'SELECT * FROM supervisor_decisions WHERE userId = ? ORDER BY timestamp DESC LIMIT 50'
+        ).bind(userId).all();
+
+        return jsonResponse({ decisions: decisions.results });
+      }
+
+      // --- SUPERVISOR: GET RECENT INTERACTIONS ---
+      if (path === '/api/interactions/recent' && method === 'GET') {
+        const userId = url.searchParams.get('userId');
+        const limit = parseInt(url.searchParams.get('limit') || '50');
+
+        const interactions = await env.DB.prepare(
+          'SELECT * FROM user_interaction_log WHERE userId = ? ORDER BY timestamp DESC LIMIT ?'
+        ).bind(userId, limit).all();
+
+        return jsonResponse({ interactions: interactions.results });
+      }
+
       return jsonResponse({
         error: 'Not Found',
         message: `The requested path '${path}' was not found.`,
@@ -508,7 +601,12 @@ export default {
           'POST /api/ingest',
           'POST /api/search',
           'POST /api/chat',
-          'GET /api/graph'
+          'GET /api/graph',
+          'POST /api/supervisor/state-change',
+          'POST /api/supervisor/analyze',
+          'POST /api/interactions/log',
+          'GET /api/supervisor/decisions',
+          'GET /api/interactions/recent'
         ]
       }, 404);
       

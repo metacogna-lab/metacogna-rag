@@ -1,0 +1,299 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6] [cursor=pointer]:
+        - generic [ref=e8]: M
+        - generic [ref=e9]: METACOGNA LAB
+      - navigation [ref=e10]:
+        - generic [ref=e11]:
+          - button "./run.sh" [ref=e12] [cursor=pointer]
+          - generic:
+            - generic: PROJECTS
+            - button "Compilar Takes 15 years of social dynamics research and ships it like a co-op game with cheat codes.":
+              - generic: Compilar
+              - generic: Takes 15 years of social dynamics research and ships it like a co-op game with cheat codes.
+            - button "MetaGoal Compresses your second brain into a single “do this next” nudge—no oracle robes required.":
+              - generic: MetaGoal
+              - generic: Compresses your second brain into a single “do this next” nudge—no oracle robes required.
+            - button "Debate Sense (Early Dev) Australian debate prep meets AI coach who’s part judge, part hype squad.":
+              - generic: Debate Sense (Early Dev)
+              - generic: Australian debate prep meets AI coach who’s part judge, part hype squad.
+            - button "/tmp 🤖 /tmp is a neon-green sandbox where robots learn new party tricks hourly.":
+              - generic: /tmp
+              - generic: 🤖 /tmp is a neon-green sandbox where robots learn new party tricks hourly.
+        - button "SERVICES" [ref=e13] [cursor=pointer]
+        - button "PROJECTS" [ref=e14] [cursor=pointer]
+        - button "METHODOLOGY" [ref=e15] [cursor=pointer]
+        - button "ABOUT" [ref=e16] [cursor=pointer]
+        - button "CONTACT" [ref=e17] [cursor=pointer]
+        - button "Switch to Dark Mode" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - link "Metacogna Lab" [ref=e23] [cursor=pointer]:
+            - /url: https://github.com/metacogna-lab
+            - img [ref=e24]
+          - link "Pratejra Tech" [ref=e27] [cursor=pointer]:
+            - /url: https://github.com/PratejraTech
+            - img [ref=e28]
+        - button "LOGIN" [ref=e31] [cursor=pointer]
+  - button "Eject (rm -rf /tmp/Me)" [ref=e33] [cursor=pointer]:
+    - img [ref=e34]
+    - generic [ref=e37]: Eject (rm -rf /tmp/Me)
+  - main [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - img [ref=e42]
+          - generic [ref=e44]: METACOGNA LABS
+        - heading "Thinking About Thinking." [level=1] [ref=e45]:
+          - text: Thinking About
+          - generic [ref=e46]: Thinking.
+        - generic [ref=e47]:
+          - img [ref=e49]
+          - generic [ref=e50]: Chaos Meets Creativity
+          - img [ref=e52]
+          - generic [ref=e53]: Abstraction Made Concrete
+          - img [ref=e55]
+        - button "EXPLORE LAB SERVICES →" [ref=e57] [cursor=pointer]
+      - generic [ref=e58]:
+        - generic [ref=e61]:
+          - generic [ref=e64]: query.log
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: "# Why do we do this?"
+            - paragraph [ref=e67]:
+              - text: "> We are motivated by a"
+              - generic [ref=e68]: quiet awe
+              - text: of the universe.
+            - generic [ref=e69]: "> Querying system parameters.."
+          - img [ref=e72]
+        - generic [ref=e75]:
+          - 'heading "System: BURSTS_OF_CLARITY_V42" [level=3] [ref=e77]'
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: "MODE: EXPLORATORY"
+              - generic [ref=e82]: "STATUS: ACTIVE"
+            - generic [ref=e84]:
+              - generic [ref=e85]:
+                - generic [ref=e86]: Input
+                - generic [ref=e87]: Curiosity
+              - generic [ref=e89]:
+                - generic [ref=e90]: Process
+                - generic [ref=e91]: Rigor
+              - generic [ref=e94]:
+                - generic [ref=e95]: Output
+                - generic [ref=e96]: Clarity
+    - generic [ref=e97]:
+      - generic [ref=e99]:
+        - heading "How We Work" [level=2] [ref=e100]
+        - paragraph [ref=e101]: /// THE_PROCESS_KERNEL
+      - generic [ref=e102]:
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - generic [ref=e108]: Variable 01
+            - heading "Curiosity" [level=3] [ref=e109]
+          - paragraph [ref=e111]: The raw input. We break premises down until they admit they were wrong.
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]: Variable 02
+            - heading "Discipline" [level=3] [ref=e119]
+          - paragraph [ref=e121]: The processing layer. Rigorous structural analysis applied to wild ideas.
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e128]: Variable 03
+            - heading "Delivery" [level=3] [ref=e129]
+          - paragraph [ref=e131]: The chaotic convergence. Multiple parallel streams hitting one inevitable target.
+      - generic [ref=e133]:
+        - img [ref=e135]
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - img [ref=e141]
+              - generic [ref=e143]: Operating Philosophy
+            - heading "Always looking for exciting partnerships, hard problems and well produced Music ." [level=3] [ref=e144]:
+              - text: Always looking for exciting partnerships, hard problems and well produced
+              - generic [ref=e145]:
+                - text: Music
+                - img [ref=e146]
+              - text: .
+          - generic [ref=e151]:
+            - generic [ref=e152]: "/// LOG_ENTRY: CURRENT_STATE"
+            - text: "\"The rise of the LLM combined with an insufferable desire to know has accelerated the development of the dabbling. We are building the tools we wish we had yesterday.\""
+      - button "STUFF & THINGS ↓" [ref=e154] [cursor=pointer]
+    - generic [ref=e156]:
+      - generic [ref=e157]: "/// ARCHITECTURE GUIDANCE: STRONG OPINIONS HELD LOOSELY"
+      - generic [ref=e158]: /// CONNECTING TO NEURAL FABRIC
+      - generic [ref=e159]: /// READY FOR INPUT
+      - generic [ref=e160]: /// PRATEJRA V1.2 ACTIVE
+      - generic [ref=e161]: "/// SYSTEM INTEGRITY: 100%"
+    - generic [ref=e163]:
+      - button "CONFUSION AWAITS ↓" [ref=e165] [cursor=pointer]
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - heading "Active Initiatives" [level=2] [ref=e168]
+          - paragraph [ref=e169]: From deeply human to deeply technical.
+        - generic [ref=e170]:
+          - button "VISUALIZE COMPETENCIES" [ref=e171] [cursor=pointer]:
+            - img [ref=e172]
+            - text: VISUALIZE COMPETENCIES
+          - button "LAB ADMIN" [ref=e178] [cursor=pointer]:
+            - img [ref=e179]
+            - text: LAB ADMIN
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - heading "Compilar" [level=3] [ref=e185]
+            - link [ref=e189] [cursor=pointer]:
+              - /url: https://github.com/metacogna-lab/compilar
+              - img [ref=e190]
+          - generic [ref=e194]:
+            - generic [ref=e195]:
+              - paragraph [ref=e196]: A structured analysis and graphical representation of over 20 years of research into group dynamics, grounded in PILAR theory. Compilar makes invisible coordination forces visible—without prescribing how groups should behave.
+              - generic [ref=e197]:
+                - generic [ref=e198]: Sociology
+                - generic [ref=e199]: Graph Theory
+                - generic [ref=e200]: PILAR
+            - generic [ref=e201]:
+              - generic [ref=e202]: "ID: COMPILAR"
+              - button "VIEW" [ref=e203] [cursor=pointer]:
+                - text: VIEW
+                - img [ref=e204]
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - heading "Neural Shadow" [level=3] [ref=e208]
+            - link [ref=e212] [cursor=pointer]:
+              - /url: https://github.com/metacogna-lab/neural-shadow
+              - img [ref=e213]
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - paragraph [ref=e219]: An adversarial honeypot for intelligent agents. Neural Shadow explores how AI systems behave under pressure, deception, and constraint—designed to surface failure modes before they matter.
+              - generic [ref=e220]:
+                - generic [ref=e221]: Security
+                - generic [ref=e222]: AI Agents
+                - generic [ref=e223]: Adversarial
+            - generic [ref=e224]:
+              - generic [ref=e225]: "ID: NEURAL-SHADOW"
+              - button "VIEW" [ref=e226] [cursor=pointer]:
+                - text: VIEW
+                - img [ref=e227]
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - heading "Timeless Love" [level=3] [ref=e231]
+            - link [ref=e235] [cursor=pointer]:
+              - /url: https://timelesslove.ai
+              - img [ref=e236]
+          - generic [ref=e240]:
+            - generic [ref=e241]:
+              - paragraph [ref=e242]: A grounded, human product focused on memory, legacy, and connection across generations. Proof that not all meaningful technology needs to be complex to be profound.
+              - generic [ref=e243]:
+                - generic [ref=e244]: Human
+                - generic [ref=e245]: Memory
+                - generic [ref=e246]: Legacy
+            - generic [ref=e247]:
+              - generic [ref=e248]: "ID: TIMELESS-LOVE"
+              - link "VIEW PROJECT" [ref=e249] [cursor=pointer]:
+                - /url: https://timelesslove.ai
+                - button "VIEW PROJECT" [ref=e250]:
+                  - text: VIEW PROJECT
+                  - img [ref=e251]
+    - generic [ref=e254]:
+      - generic [ref=e255]:
+        - heading "The \"Methodology\"" [level=2] [ref=e256]
+        - paragraph [ref=e257]: A loosely controlled experiment in thinking clearly
+      - generic [ref=e258]:
+        - button "METHODOLOGY (LAB COATS OPTIONAL, MUSIC COMPULSORY)" [ref=e259] [cursor=pointer]:
+          - img [ref=e260]
+          - generic [ref=e262]: METHODOLOGY (LAB COATS OPTIONAL, MUSIC COMPULSORY)
+        - code [ref=e268]:
+          - text: const LAB_COATS += STYLE_POINTS;
+          - text: "if (MUSIC === true) {"
+          - text: SOUL = "Nourished";
+          - text: Truth.render();
+          - text: "}"
+      - paragraph [ref=e269]: /// Click Methodology to Initiate Protocol ///
+    - generic [ref=e272]:
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - generic [ref=e275]: PHILOSOPHY
+          - 'heading "Our \"work\" begins with a simple question: Why?" [level=2] [ref=e276]'
+          - generic [ref=e277]:
+            - paragraph [ref=e278]: We are motivated by the quiet awe of the universe, the strange joy of discovering how things really behave, and the belief that better thinking leads to better outcomes.
+            - paragraph [ref=e279]: "\"We treat thinking as a system, not a personality trait.\""
+            - paragraph [ref=e280]: Metacogna Labs is intentionally small. That is not a limitation; it is a feature. It allows fast iteration without institutional drag, and lets ideas be tested before they harden into dogma.
+        - generic [ref=e281]:
+          - img [ref=e283]
+          - generic [ref=e285]:
+            - paragraph [ref=e286]: The Rise of the LLM...
+            - paragraph [ref=e287]: ...has commoditized answers but inflated the value of the right questions. We dabble not to escape mastery, but to find where the silos touch. We are looking for partners who understand that the hardest problems require jazz, not just algorithms. Continuous learning is safe here, for now.
+          - generic:
+            - generic:
+              - img
+              - generic: TACTICAL_MINDSET_V1
+            - generic:
+              - paragraph: Power usage of the plethora of AI tools requires a combination of a mindset that understands the importance of precision and flexibility of mind that leads to creative problem solving.
+              - generic:
+                - generic:
+                  - img
+                  - text: Use processing time for parallelisation
+                - generic:
+                  - img
+                  - text: Store relevant data (including prompts)
+                - generic:
+                  - img
+                  - text: Systematic product design & deployment
+              - paragraph: "\"Prototyping is quick and easy, and we use this to start collecting User Research, iterate and move quickly.\""
+            - generic: The Magic is in Your Data Modelling
+      - generic [ref=e291]:
+        - 'heading "PERSONNEL FILE: FOUNDER" [level=3] [ref=e293]'
+        - generic [ref=e295]:
+          - generic [ref=e296]:
+            - generic [ref=e297]:
+              - generic [ref=e298]: NAME
+              - text: SUNYATA
+            - generic [ref=e299]:
+              - generic [ref=e300]: CLASSIFICATION
+              - generic [ref=e301]: FATHER // MAD_SCIENTIST // CHIEF_DABBLING_OFFICER
+          - generic [ref=e302]:
+            - paragraph [ref=e303]: Zen Mind, Beginner's Mind. We are a "Lab" because "Dabble Shop" didn't quite make it past the Marketing neuron.
+            - paragraph [ref=e304]: Enjoyed walking uphill and being scraped on rocks for a while. Grateful for this moment in time beyond words. A transformational experience and soul tuning to the vibrations of the walls of the Squamish ( Sḵwx̱wú7mesh) region during an afternoon "Mother Wind"
+          - generic [ref=e305]:
+            - generic [ref=e306]:
+              - img [ref=e307]
+              - generic [ref=e310]:
+                - generic [ref=e311]: Favourite Person
+                - text: Richard P. Feynman
+            - generic [ref=e312]:
+              - img [ref=e313]
+              - generic [ref=e315]:
+                - generic [ref=e316]: Favourite Book
+                - text: Refuse to answer.
+                - generic [ref=e317]: (Same refusal applies to music (Concrete < Continuous))
+            - generic [ref=e318]:
+              - img [ref=e319]
+              - generic [ref=e323]:
+                - generic [ref=e324]: Dietary Habits
+                - text: Eats abstractions for breakfast.
+                - generic [ref=e325]: Lays them down with a plan by lunch.
+          - button "GENERATE_VISUAL_ID" [ref=e328] [cursor=pointer]:
+            - img [ref=e330]
+            - generic [ref=e334]: GENERATE_VISUAL_ID
+          - generic [ref=e335]: "Preferred Modus Operandi: Perceived Chaos - We Call It \"Paralleled Phase Implementation\" (sounds good)"
+  - contentinfo [ref=e336]:
+    - generic [ref=e337]:
+      - generic [ref=e338]:
+        - img [ref=e339]
+        - heading "METACOGNA LAB" [level=4] [ref=e341]
+      - paragraph [ref=e342]:
+        - text: We are guided by the joy of finding things out.
+        - text: We stay because the
+        - generic [ref=e343]: questions
+        - text: keep getting better.
+      - generic [ref=e344]:
+        - button "Contact" [ref=e345] [cursor=pointer]
+        - button "Email Lab" [ref=e346] [cursor=pointer]
+        - link "Github" [ref=e347] [cursor=pointer]:
+          - /url: https://github.com/metacogna-lab
+      - generic [ref=e348]: © 2025 Metacogna Labs. Quietly Confident. Negative Entropy as a Service.
+```

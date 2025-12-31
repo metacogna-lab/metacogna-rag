@@ -1,5 +1,5 @@
 
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { UploadView } from './views/UploadView';
 import { QuestionView } from './views/QuestionView';
@@ -15,21 +15,31 @@ import { AuthView } from './views/AuthView'; // Import Auth
 import { SignupView } from './views/SignupView'; // Import Signup
 import { GlobalAIModal } from './components/GlobalAIModal';
 import { SystemPromptAlert } from './components/SystemPromptAlert';
-import { ViewState, Document, AppConfig } from './types';
+import { SupervisorWidget } from './components/SupervisorWidget';
+import { SupervisorToast } from './components/SupervisorToast';
+import { ViewState } from './types';
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { DEFAULT_CONFIG } from './constants'; // Removed MOCK_DOCUMENTS
 import { systemLogs } from './services/LogService';
 import { authService } from './services/AuthService';
+import { useAppStore, selectAuth, selectDocuments, selectConfig, selectCurrentView } from './store';
+import { pollingManager } from './services/PollingManager';
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.LANDING);
-  // Start empty for production readiness
-  const [documents, setDocuments] = useState<Document[]>([]); 
-  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Zustand selectors
+  const { isAuthenticated, isAdmin, username } = useAppStore(selectAuth);
+  const documents = useAppStore(selectDocuments);
+  const config = useAppStore(selectConfig);
+  const currentView = useAppStore(selectCurrentView);
+  const isAIModalOpen = useAppStore(state => state.isAIModalOpen);
+
+  // Zustand actions
+  const setView = useAppStore(state => state.setView);
+  const setConfig = useAppStore(state => state.setConfig);
+  const setDocuments = useAppStore(state => state.setDocuments);
+  const setAIModalOpen = useAppStore(state => state.setAIModalOpen);
+  const setAuth = useAppStore(state => state.setAuth);
+  const logout = useAppStore(state => state.logout);
 
   // Keyboard Shortcut for My AI Modal
   useEffect(() => {
@@ -45,9 +55,11 @@ function App() {
     // Check initial auth
     const user = authService.getCurrentUser();
     if (user) {
-        setIsAuthenticated(true);
-        setIsAdmin(user.isAdmin === 1);
-        setConfig(prev => ({ ...prev, userName: user.username }));
+        setAuth({
+            id: user.id,
+            username: user.username,
+            isAdmin: user.isAdmin === 1
+        });
     }
 
     // Log app init
@@ -61,38 +73,47 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Supervisor Polling Manager
+  useEffect(() => {
+    if (isAuthenticated && username) {
+      pollingManager.start();
+      return () => pollingManager.stop();
+    }
+  }, [isAuthenticated, username]);
+
   const handleLoginSuccess = () => {
-      setIsAuthenticated(true);
       const user = authService.getCurrentUser();
       if (user) {
-          setIsAdmin(user.isAdmin === 1);
-          setConfig(prev => ({ ...prev, userName: user.username }));
+          setAuth({
+              id: user.id,
+              username: user.username,
+              isAdmin: user.isAdmin === 1
+          });
       }
   };
 
   const handleLogout = () => {
       authService.logout();
-      setIsAuthenticated(false);
-      setCurrentView(ViewState.LANDING);
+      logout(); // Zustand logout action (resets auth state and sets view to LANDING)
   };
 
   const renderView = () => {
     switch (currentView) {
       case ViewState.LANDING:
         return (
-          <LandingPageView 
-            onNavigate={setCurrentView} 
+          <LandingPageView
+            onNavigate={setView}
             documents={documents}
             config={config}
           />
         );
       case ViewState.UPLOAD:
         return (
-          <UploadView 
-            documents={documents} 
-            setDocuments={setDocuments} 
-            config={config} 
-            onNavigateToSettings={() => setCurrentView(ViewState.SETTINGS)}
+          <UploadView
+            documents={documents}
+            setDocuments={setDocuments}
+            config={config}
+            onNavigateToSettings={() => setView(ViewState.SETTINGS)}
           />
         );
       case ViewState.QUESTION:
@@ -114,9 +135,9 @@ function App() {
       case ViewState.SIGNUP:
         return (
           <SignupView
-            onClose={() => setCurrentView(ViewState.LANDING)}
+            onClose={() => setView(ViewState.LANDING)}
             onSuccess={() => {
-              setCurrentView(ViewState.LANDING);
+              setView(ViewState.LANDING);
               systemLogs.add({
                 level: 'success',
                 category: 'admin',
@@ -128,8 +149,8 @@ function App() {
         );
       default:
         return (
-          <LandingPageView 
-            onNavigate={setCurrentView} 
+          <LandingPageView
+            onNavigate={setView}
             documents={documents}
             config={config}
           />
@@ -157,25 +178,29 @@ function App() {
       }>
         <Layout
             currentView={currentView}
-            setView={setCurrentView}
+            setView={setView}
             config={config}
             isAdmin={isAdmin}
             onLogout={handleLogout}
         >
-          <SystemPromptAlert 
-            config={config} 
-            onNavigateToSettings={() => setCurrentView(ViewState.SETTINGS)} 
+          <SystemPromptAlert
+            config={config}
+            onNavigateToSettings={() => setView(ViewState.SETTINGS)}
           />
           {renderView()}
         </Layout>
-        
+
         {/* Global Modal */}
-        <GlobalAIModal 
-          isOpen={isAIModalOpen} 
-          onClose={() => setIsAIModalOpen(false)} 
-          config={config} 
-          setConfig={setConfig} 
+        <GlobalAIModal
+          isOpen={isAIModalOpen}
+          onClose={() => setAIModalOpen(false)}
+          config={config}
+          setConfig={setConfig}
         />
+
+        {/* Supervisor Components */}
+        <SupervisorWidget />
+        <SupervisorToast />
       </Suspense>
     </ErrorBoundary>
   );
