@@ -113,6 +113,16 @@ Types are organized into schema modules:
 - `schemas/prompts.ts` - System prompts and templates
 - `schemas/settings.ts` - App configuration and LLM settings
 
+### Worker Layer (`worker/src/index.ts`)
+
+Cloudflare Worker backend implementation:
+- **Auth Routes** - `/api/auth/login` and `/api/auth/register` with D1 database
+- **Ingest Route** - `/api/ingest` for document processing with Workers AI embeddings
+- **Search Route** - `/api/search` for vector similarity search via Vectorize
+- **Graph Route** - `/api/graph` for knowledge graph data retrieval
+- **Bindings** - AI (Workers AI), VECTOR_INDEX (Vectorize), DB (D1 Database)
+- **CORS** - Full CORS support for browser access
+
 ## Development Commands
 
 ### Always Use Bun
@@ -162,26 +172,45 @@ curl http://localhost:11434
 
 ### Cloudflare Workers (Cloud Deployment)
 
+Three deployment methods available:
+
+**Method 1: Automated Script (Recommended)**
 ```bash
-# Create D1 database
+# Authenticate first
+bun wrangler login
+
+# Full deployment
+./deployment/deploy.sh --full
+
+# Or step-by-step
+./deployment/deploy.sh --setup        # Setup resources
+./deployment/deploy.sh --worker-only  # Deploy worker
+```
+
+**Method 2: NPM Scripts**
+```bash
+bun run deploy:setup    # Create D1, Vectorize, init schema
+# Update wrangler.toml with database_id from output
+bun run deploy:full     # Build and deploy
+
+# Individual scripts available:
+bun run worker:dev      # Local worker dev server
+bun run worker:deploy   # Deploy worker
+bun run worker:tail     # Stream logs
+bun run db:create       # Create D1 database
+bun run db:init         # Initialize schema
+bun run vector:create   # Create vector index
+```
+
+**Method 3: Manual Commands**
+```bash
+# See deployment/DEPLOYMENT.md for complete guide
 bun wrangler d1 create pratejra-db
-# Copy database_id to wrangler.toml
-
-# Create vector index
 bun wrangler vectorize create pratejra-index --dimensions=768 --metric=cosine
-
-# Initialize database schema
 bun wrangler d1 execute pratejra-db --file=db/schema.sql
-
-# Set secrets
 bun wrangler secret put LANGFUSE_PUBLIC_KEY
 bun wrangler secret put LANGFUSE_SECRET_KEY
-
-# Deploy worker
 bun wrangler deploy
-
-# Tail logs
-bun wrangler tail
 ```
 
 ## Key Configuration
@@ -386,12 +415,13 @@ test("service functionality", () => {
 4. Set secrets: `bun wrangler secret put LANGFUSE_PUBLIC_KEY`
 5. Deploy: `bun wrangler deploy`
 
-## Known Limitations
+## Important Notes
 
-- **Worker Directory**: Currently empty - worker implementation planned for `worker/src/index.ts`
-- **Database Schema**: `db/schema.sql` appears corrupted - refer to `deployment/wrangler.md` for schema
+- **Worker Implementation**: Fully implemented at `worker/src/index.ts` with auth, ingest, search, and graph endpoints
+- **Database Schema**: Located at `db/schema.sql` with tables: users, documents, graph_nodes, graph_edges
 - **ChromaDB CORS**: Requires `ANONYMIZED_TELEMETRY=FALSE` in docker-compose.yml
 - **Ollama CORS**: Requires `OLLAMA_ORIGINS=*` in docker-compose.yml for browser access
+- **Deployment Docs**: Complete guides in `deployment/` directory (DEPLOYMENT.md, CHECKLIST.md, README.md)
 
 ## Bun-Specific Patterns
 
@@ -425,6 +455,9 @@ const apiKey = process.env.GEMINI_API_KEY; // Auto-loaded from .env
 
 - Vite configuration: `vite.config.ts` (port 3000, Docker networking enabled)
 - TypeScript config: `tsconfig.json` (ES2020, bundler mode, strict)
-- Deployment guide: `LOCAL_DEPLOYMENT.md`
-- Worker setup: `deployment/wrangler.md`
+- Local deployment: `LOCAL_DEPLOYMENT.md` (Docker setup guide)
+- Cloud deployment: `deployment/DEPLOYMENT.md` (complete Cloudflare Workers guide)
+- Deployment checklist: `deployment/CHECKLIST.md` (quick reference)
+- Deployment automation: `deployment/deploy.sh` (automated setup script)
+- Worker configuration: `deployment/wrangler.md` (original config reference)
 - Root meta-repo: `../CLAUDE.md` (contains multi-project guidance)
