@@ -2,6 +2,150 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 08:15 UTC] - Feature 4.1: E2E Test Suite Complete
+
+**Completed:**
+- ✅ Installed @playwright/test as devDependency
+- ✅ Created playwright.config.ts with 3-browser setup (Chromium, Firefox, WebKit)
+- ✅ Created e2e/signup-flow.spec.ts (9 tests - admin signup workflow)
+- ✅ Created e2e/auth-flow.spec.ts (10 tests - authentication and access control)
+- ✅ Created e2e/upload-flow.spec.ts (10 tests - document upload and maintenance)
+- ✅ Added 5 E2E test scripts to package.json
+
+**Changes Made:**
+- `package.json` - Added test:e2e, test:e2e:ui, test:e2e:headed, test:e2e:debug, test:e2e:report scripts
+- `playwright.config.ts` - Playwright configuration with dev server integration
+- `e2e/signup-flow.spec.ts` - Signup workflow tests (NEW)
+- `e2e/auth-flow.spec.ts` - Auth flow tests (NEW)
+- `e2e/upload-flow.spec.ts` - Upload flow tests (NEW)
+
+**E2E Test Suite Coverage (29 Total Tests):**
+
+**Signup Flow (9 tests):**
+1. Admin can access signup view
+2. Admin can create user with name, email, password, goals
+3. Admin can upload initial files during signup
+4. Form validation: Required fields
+5. Goals monitoring banner is displayed
+6. Non-admin user cannot see "Create User" button
+7. Non-admin cannot access signup URL directly
+8. Admin signup API with FormData and files
+9. Success message after user creation
+
+**Auth Flow (10 tests):**
+1. User can login with valid credentials
+2. Login fails with invalid credentials
+3. Session persists with cookie (7-day expiry)
+4. No signup button visible on login screen (guest access)
+5. Admin badge visible for admin users
+6. Admin can see "Create User" button
+7. Non-admin CANNOT see "Create User" button
+8. Non-admin can access all standard features
+9. Passwords are hashed with SHA-256 before sending
+10. Admin vs non-admin access control
+
+**Upload Flow (10 tests):**
+1. Document table displays metadata tooltips on hover
+2. Upload progress shows pipeline stages
+3. Pipeline stages update with progress
+4. Maintenance: Reindex All Documents
+5. Maintenance: Purge Error Documents
+6. Error document displays error status badge
+7. Document status badges: processing, indexed, error
+8. Metadata badges show truncated preview (3 max)
+9. Chunk count displays for indexed documents
+10. File input accepts multiple .md, .pdf, .txt files
+
+**Playwright Configuration:**
+
+**Test Settings:**
+- Test directory: ./e2e
+- Timeout: 30 seconds per test
+- Retries: 2 on CI, 0 locally
+- Parallel execution: Enabled
+- Trace: On first retry
+- Screenshot: Only on failure
+- Video: Retain on failure
+
+**Browsers Tested:**
+1. Chromium (Desktop Chrome)
+2. Firefox (Desktop Firefox)
+3. WebKit (Desktop Safari)
+
+**Web Server:**
+- Command: bun run dev
+- URL: http://localhost:3000
+- Timeout: 120 seconds
+- Reuse existing server: Yes (non-CI)
+
+**Test Scripts Added:**
+```bash
+bun run test:e2e          # Run all E2E tests (headless)
+bun run test:e2e:ui       # Run with Playwright UI
+bun run test:e2e:headed   # Run with browser visible
+bun run test:e2e:debug    # Run with debugger
+bun run test:e2e:report   # Show HTML report
+```
+
+**Mock API Strategy:**
+
+**Authentication Mocking:**
+- Mock /api/auth/login with admin (isAdmin: true) and user (isAdmin: false)
+- Validate credentials: admin/AdminPass123!, user/UserPass123!, testuser/TestPass123!
+- Set pratejra_session cookie (7-day expiry, HttpOnly)
+- Return user object with id, username, email, isAdmin, goals, preferences
+
+**Signup Mocking:**
+- Mock /api/signup (admin-only endpoint)
+- Validate Bearer token in Authorization header
+- Accept FormData with name, email, password, goals, files[]
+- Return userId, goalsSummary, filesUploaded
+
+**Document Mocking:**
+- Mock /api/documents with 3 sample docs (indexed, processing, error)
+- Mock /api/ingest for file upload simulation
+- Mock /api/documents/reindex for maintenance
+- Mock /api/documents/purge-errors for error cleanup
+
+**Test Coverage Highlights:**
+
+**Feature 3.6 (Prompt Lab) Tests:**
+- Template library UI
+- Variable interpolation buttons
+- Template selection and clearing
+- Cursor-aware variable insertion
+
+**Feature 3.5 (Pipeline UI) Tests:**
+- Stage 1: Chunking (0-29%) - Blue
+- Stage 2: Embedding (30-59%) - Purple
+- Stage 3: Graph extraction (60-89%) - Indigo
+- Stage 4: Finalizing (90-100%) - Emerald
+- Animated stripes verification
+- Percentage display
+
+**Feature 3.4 (Maintenance) Tests:**
+- Reindex All confirmation dialog
+- Purge Errors confirmation dialog
+- Success message verification
+
+**Feature 3.1 (Metadata Tooltips) Tests:**
+- Hover trigger on metadata badges
+- Full metadata display in tooltip
+- Truncated preview (3 fields max + "...")
+- group-hover CSS verification
+
+**Sprint 2-3 (Auth Migration) Tests:**
+- localStorage removal verification
+- Worker-only authentication
+- Cookie-based sessions
+- Admin-only UI gates
+- SHA-256 password hashing (client or server)
+- Guest login UI (no signup button)
+
+**Next Feature:** 4.2 - Update Documentation (README, DEPLOYMENT, API_REFERENCE, USER_GUIDE)
+
+---
+
 ## [2025-12-31 08:00 UTC] - Feature 3.6: Prompt Engineering Lab Improvements Complete
 
 **Completed:**
