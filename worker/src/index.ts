@@ -5,6 +5,8 @@
  */
 
 import { handleSignup } from './handlers/signup';
+import { uploadToR2 } from './services/r2';
+import { generateR2DocumentKey } from './utils/r2-keys';
 
 interface Env {
   AI: any;
@@ -199,12 +201,36 @@ export default {
 
       // --- INGEST ROUTE (Vectors + Graph) ---
       if (path === '/api/ingest' && method === 'POST') {
-        const { docId, title, content, metadata } = await request.json() as any;
-        
-        // 1. Storage: Persist Document Metadata
+        const { docId, userId, title, content, metadata } = await request.json() as any;
+
+        // Validate required fields
+        if (!userId) {
+          return jsonResponse({ success: false, error: 'Missing required field: userId' }, 400);
+        }
+
+        // 1. Storage: Upload FULL content to R2
+        const r2Key = generateR2DocumentKey(userId, docId, title);
+        await uploadToR2(env.metacogna_vault, r2Key, content, {
+          userId,
+          docId,
+          title,
+          uploadedAt: Date.now().toString(),
+          ...metadata
+        });
+
+        // 2. Storage: Persist Document Metadata with preview (first 500 chars) in D1
         await env.DB.prepare(
-          'INSERT OR REPLACE INTO documents (id, title, content, metadata, createdAt) VALUES (?, ?, ?, ?, ?)'
-        ).bind(docId, title, content.substring(0, 1000), JSON.stringify(metadata), Date.now()).run();
+          'INSERT OR REPLACE INTO documents (id, userId, title, content, r2Key, metadata, createdAt, uploadedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(
+          docId,
+          userId,
+          title,
+          content.substring(0, 500),  // Preview only
+          r2Key,
+          JSON.stringify(metadata),
+          Date.now(),
+          Date.now()
+        ).run();
 
         // 2. Vector Processing: Chunk & Embed
         const chunks = content.match(/.{1,512}/g) || [];
@@ -280,10 +306,11 @@ export default {
             await env.DB.batch(batch);
         }
 
-        return jsonResponse({ 
-            success: true, 
-            chunks: chunks.length, 
-            graphNodes: graphData.nodes?.length || 0 
+        return jsonResponse({
+            success: true,
+            r2Key,
+            chunks: chunks.length,
+            graphNodes: graphData.nodes?.length || 0
         });
       }
 

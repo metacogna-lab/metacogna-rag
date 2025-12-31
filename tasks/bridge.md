@@ -2,6 +2,43 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:00 UTC] - Feature 1.8: Update Ingest Endpoint for R2 Complete
+
+**Completed:**
+- ✅ Modified POST /api/ingest to use R2 for content storage
+- ✅ Added userId requirement to ingest endpoint (breaking change)
+- ✅ Uploads FULL document content to R2 (no truncation)
+- ✅ Stores only 500-char preview in D1 for performance
+- ✅ Links D1 documents to R2 via r2Key field
+- ✅ Generates R2 keys: users/{userId}/documents/{docId}/{title}
+- ✅ Preserves full content for vector processing (chunking)
+- ✅ Preserves full content for graph extraction (first 2000 chars)
+- ✅ Returns r2Key in success response
+- ✅ All 13 integration tests passing
+
+**Changes Made:**
+- `worker/src/index.ts` - Updated /api/ingest endpoint with R2 storage
+- `worker/__tests__/ingest-r2.test.ts` - R2 integration test suite
+
+**Technical Notes:**
+- BREAKING CHANGE: /api/ingest now requires `userId` parameter
+- Content storage strategy: Full content in R2, 500-char preview in D1
+- R2 key format: `users/{userId}/documents/{docId}/{title}`
+- R2 metadata includes: userId, docId, title, uploadedAt, ...custom
+- Vector processing uses FULL content (512-char chunks)
+- Graph extraction uses first 2000 chars
+- Response includes r2Key for verification
+
+**Breaking Changes:**
+- Clients must include `userId` in POST /api/ingest requests
+- Missing userId returns 400 Bad Request
+
+**Next Phase:** Sprint 3 - Frontend Auth Migration
+
+**Sprint 2 Status:** Signup Workflow (4/4 features complete) ✅
+
+---
+
 ## [2025-12-31 06:50 UTC] - Feature 1.7: Admin-Only Signup Endpoint Complete
 
 **Completed:**
