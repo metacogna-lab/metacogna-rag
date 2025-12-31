@@ -16,7 +16,30 @@
 - `db/schema.sql` - Enhanced user and document schemas
 - `worker/__tests__/schema.test.ts` - Schema validation tests
 
-**Next Feature:** 1.3 - R2 Storage Integration
+**Next Feature:** 1.4 - Goal Summarization Function
+
+---
+
+## [2025-12-31 06:25 UTC] - Feature 1.3: R2 Storage Integration Complete
+
+**Completed:**
+- ✅ Created `worker/src/services/r2.ts` with R2 upload/download functions
+- ✅ Implemented uploadToR2(), getFromR2(), deleteFromR2(), listUserDocuments()
+- ✅ Added content type detection for PDF, MD, TXT, JSON, images
+- ✅ Added getR2Metadata() for metadata-only queries
+- ✅ Updated worker Env interface with metacogna_vault R2 binding
+- ✅ Fixed VECTOR_INDEX → VECTORIZE to match wrangler.toml binding
+- ✅ All 9 R2 tests passing
+
+**Changes Made:**
+- `worker/src/services/r2.ts` - R2 storage service
+- `worker/src/index.ts` - Updated Env interface, fixed vector binding references
+- `worker/__tests__/r2.test.ts` - R2 storage tests
+
+**Technical Notes:**
+- R2 binding uses lowercase "metacogna_vault" to match wrangler.toml config
+- Vectorize binding corrected from VECTOR_INDEX to VECTORIZE
+- Content type auto-detection supports 12+ file types
 
 ---
 

@@ -6,8 +6,9 @@
 
 interface Env {
   AI: any;
-  VECTOR_INDEX: any; // VectorizeIndex
+  VECTORIZE: any; // VectorizeIndex
   DB: any; // D1Database
+  metacogna_vault: R2Bucket; // R2 bucket for document storage
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
   LANGFUSE_HOST?: string;
@@ -123,6 +124,9 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+    
+    // Debug logging (remove in production if needed)
+    console.log(`[${method}] ${path} - Host: ${url.hostname}`);
 
     if (method === 'OPTIONS') {
       return new Response(null, {
@@ -135,6 +139,24 @@ export default {
     }
 
     try {
+      // --- ROOT PATH HANDLER ---
+      if (path === '/' && method === 'GET') {
+        return jsonResponse({
+          service: 'metacogna-api',
+          version: '1.0.0',
+          status: 'ok',
+          endpoints: {
+            health: '/api/health',
+            auth: '/api/auth/login, /api/auth/register',
+            ingest: '/api/ingest',
+            search: '/api/search',
+            graph: '/api/graph',
+            chat: '/api/chat'
+          },
+          documentation: 'https://docs.metacogna.ai'
+        });
+      }
+
       // --- HEALTH CHECK ---
       if (path === '/api/health' && method === 'GET') {
         return jsonResponse({ 
@@ -186,7 +208,7 @@ export default {
           metadata: { ...metadata, docId, title, content: chunk, chunkIndex: i }
         }));
         
-        await env.VECTOR_INDEX.upsert(vectors);
+        await env.VECTORIZE.upsert(vectors);
 
         // 3. Graph Processing: Extract Entities & Relations
         // We use a lighter model for speed, or a stronger one for quality.
@@ -261,7 +283,7 @@ export default {
       if (path === '/api/search' && method === 'POST') {
         const { query, topK = 5 } = await request.json() as any;
         const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-        const results = await env.VECTOR_INDEX.query(embedding.data[0], { topK, returnMetadata: true });
+        const results = await env.VECTORIZE.query(embedding.data[0], { topK, returnMetadata: true });
         return jsonResponse({ results: results.matches });
       }
 
@@ -312,7 +334,7 @@ export default {
         let sources: any[] = providedSources || [];
         if (!providedSources || providedSources.length === 0) {
           const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-          const searchResults = await env.VECTOR_INDEX.query(embedding.data[0], { topK, returnMetadata: true });
+          const searchResults = await env.VECTORIZE.query(embedding.data[0], { topK, returnMetadata: true });
           sources = searchResults.matches.map((r: any) => ({
             id: r.id,
             documentTitle: r.metadata?.title || 'Unknown',
@@ -440,7 +462,19 @@ export default {
         });
       }
 
-      return new Response('Not Found', { status: 404 });
+      return jsonResponse({
+        error: 'Not Found',
+        message: `The requested path '${path}' was not found.`,
+        availableEndpoints: [
+          'GET /api/health',
+          'POST /api/auth/login',
+          'POST /api/auth/register',
+          'POST /api/ingest',
+          'POST /api/search',
+          'POST /api/chat',
+          'GET /api/graph'
+        ]
+      }, 404);
       
     } catch (e: any) {
       return errorResponse(e.message || String(e));
