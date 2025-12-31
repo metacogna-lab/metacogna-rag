@@ -68,5 +68,5 @@ export function generateR2ProfileKey(userId: string, dataType: string): string {
  */
 export function parseUserIdFromR2Key(r2Key: string): string | null {
   const match = r2Key.match(/^users\/([\w-]+)\//);
-  return match ? match[1] : null;
+  return match ? (match[1] || null) : null;
 }

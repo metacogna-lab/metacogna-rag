@@ -2,6 +2,45 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 06:50 UTC] - Feature 1.7: Admin-Only Signup Endpoint Complete
+
+**Completed:**
+- ✅ Created `worker/src/handlers/signup.ts` with complete signup workflow
+- ✅ Created `worker/src/utils/password.ts` with SHA-256 password hashing
+- ✅ Integrated admin token validation into signup endpoint
+- ✅ Implemented 10-step signup workflow: auth → validation → user creation → file upload
+- ✅ Added POST /api/signup endpoint to worker/src/index.ts
+- ✅ Validates required fields (name, email, password)
+- ✅ Checks email uniqueness before user creation
+- ✅ Generates UUID for new users, hashes passwords with salt
+- ✅ Summarizes user goals with Workers AI
+- ✅ Uploads initial files to R2 with document metadata in D1
+- ✅ Returns 201 Created with userId, goalsSummary, files[]
+- ✅ Comprehensive error handling (403, 400, 409, 500 status codes)
+
+**Changes Made:**
+- `worker/src/handlers/signup.ts` - Complete signup handler
+- `worker/src/utils/password.ts` - Password hashing utilities
+- `worker/src/index.ts` - Added /api/signup route and import
+- `worker/__tests__/signup-endpoint.test.ts` - Signup endpoint specification tests
+- `worker/src/services/r2.ts` - Fixed R2Bucket type references
+- `worker/src/utils/r2-keys.ts` - Fixed undefined type handling
+- `worker/__tests__/upload.test.ts` - Fixed type-only import
+
+**Technical Notes:**
+- Password hashing: SHA-256 with random salt (salt:hash format)
+- Admin-only access: Requires valid Bearer token via validateAdminToken()
+- Signup workflow integrates: UUID gen, password hash, goal summarization, file upload
+- FormData parsing for multi-file uploads
+- Database operations: user creation, document metadata creation
+- R2 storage: files uploaded with unique keys (users/{userId}/documents/{uuid}-{filename})
+
+**Next Feature:** 1.8 - Update Ingest Endpoint for R2
+
+**Sprint 2 Status:** Signup Workflow (3/4 features complete)
+
+---
+
 ## [2025-12-31 06:40 UTC] - Feature 1.6: Admin Token Validation Complete
 
 **Completed:**

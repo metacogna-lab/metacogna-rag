@@ -4,7 +4,8 @@
  */
 
 import { describe, test, expect, mock } from 'bun:test';
-import { handleMultiFileUpload, UploadResult } from '../src/handlers/upload';
+import { handleMultiFileUpload } from '../src/handlers/upload';
+import type { UploadResult } from '../src/handlers/upload';
 
 describe('Multi-File Upload Handler', () => {
   test('should upload multiple files to R2 with unique keys', async () => {

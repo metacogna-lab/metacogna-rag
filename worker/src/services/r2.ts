@@ -49,7 +49,7 @@ function getContentType(filename: string): string {
  * );
  */
 export async function uploadToR2(
-  bucket: R2Bucket,
+  bucket: any,
   key: string,
   content: string,
   metadata: Record<string, string>
@@ -72,7 +72,7 @@ export async function uploadToR2(
  * @example
  * const content = await getFromR2(env.METACOGNA_VAULT, 'users/user-123/documents/doc.md');
  */
-export async function getFromR2(bucket: R2Bucket, key: string): Promise<string | null> {
+export async function getFromR2(bucket: any, key: string): Promise<string | null> {
   const object = await bucket.get(key);
 
   if (!object) {
@@ -92,7 +92,7 @@ export async function getFromR2(bucket: R2Bucket, key: string): Promise<string |
  * @example
  * await deleteFromR2(env.METACOGNA_VAULT, 'users/user-123/documents/old.pdf');
  */
-export async function deleteFromR2(bucket: R2Bucket, key: string): Promise<void> {
+export async function deleteFromR2(bucket: any, key: string): Promise<void> {
   await bucket.delete(key);
 }
 
@@ -108,14 +108,14 @@ export async function deleteFromR2(bucket: R2Bucket, key: string): Promise<void>
  * // [{ key: 'users/user-123/documents/file1.md', size: 1024 }, ...]
  */
 export async function listUserDocuments(
-  bucket: R2Bucket,
+  bucket: any,
   userId: string
 ): Promise<Array<{ key: string; size: number }>> {
   const prefix = `users/${userId}/documents/`;
 
   const listed = await bucket.list({ prefix });
 
-  return listed.objects.map(obj => ({
+  return listed.objects.map((obj: any) => ({
     key: obj.key,
     size: obj.size
   }));
@@ -132,7 +132,7 @@ export async function listUserDocuments(
  * const info = await getR2Metadata(env.METACOGNA_VAULT, 'users/user-123/profile/avatar');
  */
 export async function getR2Metadata(
-  bucket: R2Bucket,
+  bucket: any,
   key: string
 ): Promise<{ size: number; uploaded: Date; metadata: Record<string, string> } | null> {
   const object = await bucket.head(key);

@@ -4,11 +4,13 @@
  * Handles: Auth (D1), Vector Search (Vectorize), Ingestion (Workers AI), Knowledge Graph (AI + D1)
  */
 
+import { handleSignup } from './handlers/signup';
+
 interface Env {
   AI: any;
   VECTORIZE: any; // VectorizeIndex
   DB: any; // D1Database
-  metacogna_vault: R2Bucket; // R2 bucket for document storage
+  metacogna_vault: any; // R2 bucket for document storage
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
   LANGFUSE_HOST?: string;
@@ -148,6 +150,7 @@ export default {
           endpoints: {
             health: '/api/health',
             auth: '/api/auth/login, /api/auth/register',
+            signup: '/api/signup (admin-only)',
             ingest: '/api/ingest',
             search: '/api/search',
             graph: '/api/graph',
@@ -187,6 +190,11 @@ export default {
         } catch (e) {
           return jsonResponse({ success: false, message: 'Username taken' }, 400);
         }
+      }
+
+      // --- ADMIN-ONLY SIGNUP ROUTE ---
+      if (path === '/api/signup' && method === 'POST') {
+        return await handleSignup(request, env);
       }
 
       // --- INGEST ROUTE (Vectors + Graph) ---
@@ -469,6 +477,7 @@ export default {
           'GET /api/health',
           'POST /api/auth/login',
           'POST /api/auth/register',
+          'POST /api/signup (admin-only)',
           'POST /api/ingest',
           'POST /api/search',
           'POST /api/chat',
