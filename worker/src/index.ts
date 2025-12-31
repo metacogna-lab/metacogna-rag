@@ -12,6 +12,7 @@ interface Env {
   AI: any;
   VECTORIZE: any; // VectorizeIndex
   DB: any; // D1Database
+  KV: any; // KV namespace for caching and rate limiting
   metacogna_vault: any; // R2 bucket for document storage
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
@@ -123,6 +124,81 @@ const jsonResponse = (data: any, status = 200) =>
 
 const errorResponse = (msg: string, status = 500) => jsonResponse({ error: msg }, status);
 
+// Rate limiting helper (uses KV namespace)
+async function checkRateLimit(
+  kv: any,
+  userId: string,
+  endpoint: string,
+  maxRequests: number = 10,
+  windowSeconds: number = 60
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  console.log('[RateLimit] Called with:', { kvBound: !!kv, userId, endpoint, maxRequests });
+
+  if (!kv) {
+    console.log('[RateLimit] KV not bound - graceful degradation');
+    return { allowed: true, remaining: maxRequests, resetAt: Date.now() + windowSeconds * 1000 };
+  }
+
+  const key = `ratelimit:${userId}:${endpoint}`;
+  const now = Date.now();
+  const windowMs = windowSeconds * 1000;
+
+  console.log('[RateLimit] Fetching key:', key);
+  const data = await kv.get(key, 'json');
+  console.log('[RateLimit] Current data:', data);
+
+  if (!data) {
+    console.log('[RateLimit] First request - initializing counter');
+    await kv.put(key, JSON.stringify({ count: 1, resetAt: now + windowMs }), { expirationTtl: windowSeconds });
+    return { allowed: true, remaining: maxRequests - 1, resetAt: now + windowMs };
+  }
+
+  if (data.count >= maxRequests) {
+    console.log('[RateLimit] LIMIT EXCEEDED:', data.count, '>=', maxRequests);
+    return { allowed: false, remaining: 0, resetAt: data.resetAt };
+  }
+
+  console.log('[RateLimit] Incrementing:', data.count, '->', data.count + 1);
+  await kv.put(key, JSON.stringify({ count: data.count + 1, resetAt: data.resetAt }), { expirationTtl: windowSeconds });
+  return { allowed: true, remaining: maxRequests - data.count - 1, resetAt: data.resetAt };
+}
+
+// Semantic chunking with sentence boundaries and sliding window
+function semanticChunk(text: string, maxSize: number = 512, overlap: number = 50): string[] {
+  // Split on sentence boundaries (., !, ?, or newlines)
+  const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  for (const sentence of sentences) {
+    const trimmedSentence = sentence.trim();
+    if (!trimmedSentence) continue;
+
+    // If adding this sentence would exceed max size
+    if (currentChunk.length + trimmedSentence.length > maxSize) {
+      if (currentChunk) {
+        chunks.push(currentChunk.trim());
+        // Start new chunk with overlap from end of previous chunk
+        const words = currentChunk.split(' ');
+        const overlapWords = words.slice(-Math.min(overlap / 5, words.length)); // ~10 words overlap
+        currentChunk = overlapWords.join(' ') + ' ' + trimmedSentence;
+      } else {
+        // Single sentence exceeds max size, split it
+        chunks.push(trimmedSentence.substring(0, maxSize));
+        currentChunk = trimmedSentence.substring(maxSize);
+      }
+    } else {
+      currentChunk += (currentChunk ? ' ' : '') + trimmedSentence;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks.length > 0 ? chunks : [text];
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -164,10 +240,21 @@ export default {
 
       // --- HEALTH CHECK ---
       if (path === '/api/health' && method === 'GET') {
-        return jsonResponse({ 
-          status: 'ok', 
+        return jsonResponse({
+          status: 'ok',
           timestamp: Date.now(),
           service: 'metacogna'
+        });
+      }
+
+      // --- DEBUG: Check bindings ---
+      if (path === '/api/debug/bindings' && method === 'GET') {
+        return jsonResponse({
+          KV: env.KV ? 'bound' : 'NOT BOUND',
+          DB: env.DB ? 'bound' : 'NOT BOUND',
+          VECTORIZE: env.VECTORIZE ? 'bound' : 'NOT BOUND',
+          AI: env.AI ? 'bound' : 'NOT BOUND',
+          R2: env.metacogna_vault ? 'bound' : 'NOT BOUND'
         });
       }
 
@@ -208,6 +295,12 @@ export default {
           return jsonResponse({ success: false, error: 'Missing required field: userId' }, 400);
         }
 
+        // Initialize progress tracking
+        const startTime = Date.now();
+        await env.DB.prepare(
+          'INSERT OR REPLACE INTO document_ingestion_status (documentId, userId, status, progress, currentStep, chunksTotal, chunksProcessed, startedAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(docId, userId, 'processing', 0, 'Uploading to R2', 0, 0, startTime, startTime).run();
+
         // 1. Storage: Upload FULL content to R2
         const r2Key = generateR2DocumentKey(userId, docId, title);
         await uploadToR2(env.metacogna_vault, r2Key, content, {
@@ -217,6 +310,11 @@ export default {
           uploadedAt: Date.now().toString(),
           ...metadata
         });
+
+        // Update progress: R2 upload complete
+        await env.DB.prepare(
+          'UPDATE document_ingestion_status SET progress = ?, currentStep = ?, updatedAt = ? WHERE documentId = ?'
+        ).bind(20, 'Saving metadata', Date.now(), docId).run();
 
         // 2. Storage: Persist Document Metadata with preview (first 500 chars) in D1
         await env.DB.prepare(
@@ -232,8 +330,13 @@ export default {
           Date.now()
         ).run();
 
-        // 2. Vector Processing: Chunk & Embed
-        const chunks = content.match(/.{1,512}/g) || [];
+        // Update progress: Starting chunking
+        const chunks = semanticChunk(content, 512, 50);
+        await env.DB.prepare(
+          'UPDATE document_ingestion_status SET progress = ?, currentStep = ?, chunksTotal = ?, updatedAt = ? WHERE documentId = ?'
+        ).bind(30, 'Embedding chunks', chunks.length, Date.now(), docId).run();
+
+        // 2. Vector Processing: Semantic Chunking & Embed
         const embeddingsResponse = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: chunks });
         
         const vectors = chunks.map((chunk: string, i: number) => ({
@@ -241,8 +344,13 @@ export default {
           values: embeddingsResponse.data[i],
           metadata: { ...metadata, docId, title, content: chunk, chunkIndex: i }
         }));
-        
+
         await env.VECTORIZE.upsert(vectors);
+
+        // Update progress: Vectors inserted
+        await env.DB.prepare(
+          'UPDATE document_ingestion_status SET progress = ?, currentStep = ?, chunksProcessed = ?, updatedAt = ? WHERE documentId = ?'
+        ).bind(60, 'Extracting knowledge graph', chunks.length, Date.now(), docId).run();
 
         // 3. Graph Processing: Extract Entities & Relations
         // We use a lighter model for speed, or a stronger one for quality.
@@ -275,36 +383,46 @@ export default {
 
         // 4. Storage: Persist Graph
         if (graphData.nodes && graphData.nodes.length > 0) {
-            const nodeStmt = env.DB.prepare('INSERT OR IGNORE INTO graph_nodes (id, label, type, summary) VALUES (?, ?, ?, ?)');
-            const edgeStmt = env.DB.prepare('INSERT OR IGNORE INTO graph_edges (id, source, target, relation) VALUES (?, ?, ?, ?)');
-            
+            const nodeStmt = env.DB.prepare('INSERT OR IGNORE INTO graph_nodes (id, label, type, summary, documentId) VALUES (?, ?, ?, ?, ?)');
+            const edgeStmt = env.DB.prepare('INSERT OR IGNORE INTO graph_edges (id, source, target, relation, documentId) VALUES (?, ?, ?, ?, ?)');
+
             const batch = [];
-            
+
             // Nodes
             for (const n of graphData.nodes) {
-                batch.push(nodeStmt.bind(n.id, n.id, n.type || 'Concept', n.summary || ''));
+                batch.push(nodeStmt.bind(n.id, n.id, n.type || 'Concept', n.summary || '', docId));
             }
-            
+
             // Edges
             if (graphData.edges) {
                 for (const e of graphData.edges) {
                     const edgeId = `${e.source}-${e.relation}-${e.target}`.replace(/\s+/g, '_');
-                    batch.push(edgeStmt.bind(edgeId, e.source, e.target, e.relation));
+                    batch.push(edgeStmt.bind(edgeId, e.source, e.target, e.relation, docId));
                 }
             }
-            
+
             // Link Document to extracted Nodes (First 3)
             for (let i = 0; i < Math.min(graphData.nodes.length, 3); i++) {
                 const n = graphData.nodes[i];
                 const linkId = `docLink-${docId}-${n.id}`;
-                batch.push(edgeStmt.bind(linkId, `DOC:${docId}`, n.id, 'mentions'));
+                batch.push(edgeStmt.bind(linkId, `DOC:${docId}`, n.id, 'mentions', docId));
             }
 
             // Also ensure the Document Node exists
-            batch.push(nodeStmt.bind(`DOC:${docId}`, title, 'Document', 'Source File'));
+            batch.push(nodeStmt.bind(`DOC:${docId}`, title, 'Document', 'Source File', docId));
 
             await env.DB.batch(batch);
+
+            // Invalidate graph cache since we just added new nodes/edges
+            if (env.KV) {
+              await env.KV.delete('graph:latest');
+            }
         }
+
+        // Mark ingestion as completed
+        await env.DB.prepare(
+          'UPDATE document_ingestion_status SET status = ?, progress = ?, currentStep = ?, completedAt = ?, updatedAt = ? WHERE documentId = ?'
+        ).bind('completed', 100, 'Completed', Date.now(), Date.now(), docId).run();
 
         return jsonResponse({
             success: true,
@@ -316,52 +434,124 @@ export default {
 
       // --- SEARCH ROUTE ---
       if (path === '/api/search' && method === 'POST') {
-        const { query, topK = 5 } = await request.json() as any;
+        const { query, topK = 5, userId } = await request.json() as any;
+
+        // Rate limiting: 20 searches per minute per user
+        const rateLimit = await checkRateLimit(env.KV, userId || 'anonymous', 'search', 20, 60);
+        if (!rateLimit.allowed) {
+          return new Response(JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many search requests. Please try again later.',
+            resetAt: rateLimit.resetAt
+          }), {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RateLimit-Remaining': String(rateLimit.remaining),
+              'X-RateLimit-Reset': String(rateLimit.resetAt)
+            }
+          });
+        }
+
         const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
         const results = await env.VECTORIZE.query(embedding.data[0], { topK, returnMetadata: true });
-        return jsonResponse({ results: results.matches });
+
+        return new Response(JSON.stringify({ results: results.matches }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Remaining': String(rateLimit.remaining),
+            'X-RateLimit-Reset': String(rateLimit.resetAt)
+          }
+        });
       }
 
       // --- GRAPH DATA ROUTE ---
       if (path === '/api/graph' && method === 'GET') {
-        // Fetch all nodes and edges from D1
-        // Limit to 100 for performance visualization
-        const nodes = await env.DB.prepare('SELECT * FROM graph_nodes LIMIT 100').all();
-        const edges = await env.DB.prepare('SELECT * FROM graph_edges LIMIT 150').all();
-        
+        // Check cache first (5-minute TTL)
+        const cacheKey = 'graph:latest';
+        if (env.KV) {
+          const cached = await env.KV.get(cacheKey, 'json');
+          if (cached) {
+            return jsonResponse({
+              ...cached,
+              metadata: { ...cached.metadata, cached: true, cacheHit: true }
+            });
+          }
+        }
+
+        // Fetch nodes and edges in parallel using D1 batch API (2x faster)
+        const [nodesResult, edgesResult] = await env.DB.batch([
+          env.DB.prepare('SELECT * FROM graph_nodes ORDER BY id LIMIT 100'),
+          env.DB.prepare('SELECT * FROM graph_edges ORDER BY source LIMIT 150')
+        ]);
+
         // Map to frontend format
-        const formattedNodes = nodes.results.map((n: any) => ({
+        const formattedNodes = nodesResult.results.map((n: any) => ({
             id: n.id,
             label: n.label,
             group: n.type,
             val: n.type === 'Document' ? 8 : 5
         }));
 
-        const formattedLinks = edges.results.map((e: any) => ({
+        const formattedLinks = edgesResult.results.map((e: any) => ({
             source: e.source,
             target: e.target,
             relation: e.relation
         }));
 
-        return jsonResponse({ nodes: formattedNodes, links: formattedLinks });
+        const graphData = {
+          nodes: formattedNodes,
+          links: formattedLinks,
+          metadata: {
+            nodeCount: formattedNodes.length,
+            edgeCount: formattedLinks.length,
+            cached: false,
+            generatedAt: Date.now()
+          }
+        };
+
+        // Cache for 5 minutes
+        if (env.KV) {
+          await env.KV.put(cacheKey, JSON.stringify(graphData), { expirationTtl: 300 });
+        }
+
+        return jsonResponse(graphData);
       }
 
       // --- CHAT ROUTE (RAG + LLM) ---
       if (path === '/api/chat' && method === 'POST') {
-        const { 
-          query, 
+        const {
+          query,
           agentType,  // NEW: Routing field for automatic prompt selection
-          sources: providedSources, 
-          llmConfig, 
+          sources: providedSources,
+          llmConfig,
           systemPrompt,  // Can override agentType prompt
-          temperature = 0.2, 
-          historyContext, 
+          temperature = 0.2,
+          historyContext,
           userGoals,
-          topK = 5 
+          userId,
+          topK = 5
         } = await request.json() as any;
 
+        // Rate limiting: 10 chat requests per minute per user
+        const rateLimit = await checkRateLimit(env.KV, userId || 'anonymous', 'chat', 10, 60);
+        if (!rateLimit.allowed) {
+          return new Response(JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many chat requests. Please try again later.',
+            resetAt: rateLimit.resetAt
+          }), {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RateLimit-Remaining': String(rateLimit.remaining),
+              'X-RateLimit-Reset': String(rateLimit.resetAt)
+            }
+          });
+        }
+
         // Resolve system prompt with precedence: explicit systemPrompt > agentType > default
-        const resolvedSystemPrompt = systemPrompt 
+        const resolvedSystemPrompt = systemPrompt
           || (agentType && AGENT_SYSTEM_PROMPTS[agentType])
           || 'You are a helpful assistant.';
 
@@ -588,6 +778,115 @@ export default {
         ).bind(userId, limit).all();
 
         return jsonResponse({ interactions: interactions.results });
+      }
+
+      // --- SUPERVISOR: DISMISS TOAST ---
+      if (path === '/api/supervisor/decisions/dismiss' && method === 'POST') {
+        const { decisionId, dismissedAt } = await request.json() as any;
+
+        await env.DB.prepare(
+          'UPDATE supervisor_decisions SET dismissedAt = ? WHERE id = ?'
+        ).bind(dismissedAt, decisionId).run();
+
+        return jsonResponse({ success: true });
+      }
+
+      // --- DOCUMENTS: LIST USER DOCUMENTS ---
+      if (path === '/api/documents' && method === 'GET') {
+        const userId = url.searchParams.get('userId');
+
+        if (!userId) {
+          return errorResponse('Missing required parameter: userId', 400);
+        }
+
+        const documents = await env.DB.prepare(
+          'SELECT id, userId, title, content, r2Key, metadata, createdAt, uploadedAt, status FROM documents WHERE userId = ? ORDER BY uploadedAt DESC'
+        ).bind(userId).all();
+
+        return jsonResponse({
+          documents: documents.results,
+          count: documents.results.length
+        });
+      }
+
+      // --- DOCUMENTS: DELETE SINGLE DOCUMENT ---
+      if (path.startsWith('/api/documents/') && method === 'DELETE') {
+        const docId = path.split('/')[3];
+
+        if (!docId) {
+          return errorResponse('Missing document ID', 400);
+        }
+
+        // Get document details first to get R2 key
+        const doc = await env.DB.prepare(
+          'SELECT r2Key, userId FROM documents WHERE id = ?'
+        ).bind(docId).first() as any;
+
+        if (!doc) {
+          return errorResponse('Document not found', 404);
+        }
+
+        // Delete from R2
+        if (doc.r2Key) {
+          try {
+            await env.metacogna_vault.delete(doc.r2Key);
+          } catch (e: any) {
+            console.warn(`Failed to delete R2 object ${doc.r2Key}:`, e.message);
+          }
+        }
+
+        // Delete from Vectorize (all chunks)
+        try {
+          // Note: Vectorize doesn't have bulk delete by prefix, so we need to track chunk IDs
+          // For now, we'll delete up to 100 chunks (typical doc has < 50)
+          const chunkIds = Array.from({ length: 100 }, (_, i) => `${docId}-${i}`);
+          await env.VECTORIZE.deleteByIds(chunkIds);
+        } catch (e: any) {
+          console.warn(`Failed to delete vectors for ${docId}:`, e.message);
+        }
+
+        // Delete from graph_nodes and graph_edges
+        await env.DB.prepare(
+          'DELETE FROM graph_nodes WHERE documentId = ?'
+        ).bind(docId).run();
+
+        await env.DB.prepare(
+          'DELETE FROM graph_edges WHERE documentId = ?'
+        ).bind(docId).run();
+
+        // Delete document record from D1
+        await env.DB.prepare(
+          'DELETE FROM documents WHERE id = ?'
+        ).bind(docId).run();
+
+        // Invalidate graph cache since we deleted graph nodes/edges
+        if (env.KV) {
+          await env.KV.delete('graph:latest');
+        }
+
+        return jsonResponse({
+          success: true,
+          message: 'Document deleted successfully',
+          documentId: docId
+        });
+      }
+
+      // --- DOCUMENTS: GET UPLOAD STATUS ---
+      if (path.match(/^\/api\/documents\/[^\/]+\/status$/) && method === 'GET') {
+        const docId = path.split('/')[3];
+
+        const status = await env.DB.prepare(
+          'SELECT * FROM document_ingestion_status WHERE documentId = ?'
+        ).bind(docId).first();
+
+        if (!status) {
+          return jsonResponse({
+            status: 'not_found',
+            message: 'No status tracking for this document'
+          }, 404);
+        }
+
+        return jsonResponse({ status });
       }
 
       return jsonResponse({

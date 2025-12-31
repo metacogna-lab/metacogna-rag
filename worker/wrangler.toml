@@ -28,6 +28,11 @@ database_id = "75e3fd65-a847-4467-8fde-ea1722564167"
 binding = "metacogna_vault"
 bucket_name = "metacogna-vault"
 
+# --- KV NAMESPACE (for caching and rate limiting) ---
+[[kv_namespaces]]
+binding = "KV"
+id = "348b0947be954a5284079344767cfbad"
+
 # --- ENVIRONMENT VARIABLES ---
 # Public variables (non-sensitive)
 [vars]
@@ -52,12 +57,8 @@ API_BASE_URL = "https://web.metacogna.ai"
 enabled = true
 head_sampling_rate = 1
 invocation_logs = true
-persist = true
-level = "debug"
 
 [observability.traces]
 enabled = true
-persist = true
 head_sampling_rate = 1
-sampling_rate = 1
 

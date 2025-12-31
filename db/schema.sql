@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS documents (
     content TEXT,
     r2Key TEXT,
     metadata TEXT,
+    status TEXT DEFAULT 'completed',
     createdAt INTEGER NOT NULL,
     uploadedAt INTEGER
 );
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS graph_nodes (
     id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
     type TEXT NOT NULL,
-    summary TEXT
+    summary TEXT,
+    documentId TEXT
 );
 
 -- Knowledge Graph Edges
@@ -40,6 +42,7 @@ CREATE TABLE IF NOT EXISTS graph_edges (
     source TEXT NOT NULL,
     target TEXT NOT NULL,
     relation TEXT NOT NULL,
+    documentId TEXT,
     FOREIGN KEY (source) REFERENCES graph_nodes(id),
     FOREIGN KEY (target) REFERENCES graph_nodes(id)
 );
@@ -48,9 +51,14 @@ CREATE TABLE IF NOT EXISTS graph_edges (
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_isAdmin ON users(isAdmin);
+CREATE INDEX IF NOT EXISTS idx_users_lastLogin ON users(lastLogin DESC);
 CREATE INDEX IF NOT EXISTS idx_documents_title ON documents(title);
 CREATE INDEX IF NOT EXISTS idx_documents_userId ON documents(userId);
 CREATE INDEX IF NOT EXISTS idx_documents_r2Key ON documents(r2Key);
+CREATE INDEX IF NOT EXISTS idx_documents_uploadedAt ON documents(uploadedAt DESC);
+CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
 CREATE INDEX IF NOT EXISTS idx_graph_nodes_type ON graph_nodes(type);
+CREATE INDEX IF NOT EXISTS idx_graph_nodes_documentId ON graph_nodes(documentId);
 CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON graph_edges(source);
 CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON graph_edges(target);
+CREATE INDEX IF NOT EXISTS idx_graph_edges_documentId ON graph_edges(documentId);
