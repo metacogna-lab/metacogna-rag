@@ -949,15 +949,32 @@ export const UploadView: React.FC<UploadViewProps> = ({ documents, setDocuments,
                           )}
                         </td>
                         <td className="py-3">
-                          <div className="flex gap-1 flex-wrap">
-                            {doc.metadata && Object.keys(doc.metadata).length > 0 ? (
-                              Object.entries(doc.metadata).slice(0, 3).map(([k,v]) => (
-                                 <span key={k} className="text-[10px] bg-white border border-gray-200 px-1 rounded text-gray-600 truncate max-w-[80px]">{k}:{v}</span>
-                              ))
-                            ) : (
-                              <span className="text-gray-300">-</span>
+                          <div className="relative group">
+                            <div className="flex gap-1 flex-wrap">
+                              {doc.metadata && Object.keys(doc.metadata).length > 0 ? (
+                                Object.entries(doc.metadata).slice(0, 3).map(([k,v]) => (
+                                   <span key={k} className="text-[10px] bg-white border border-gray-200 px-1 rounded text-gray-600 truncate max-w-[80px]">{k}:{v}</span>
+                                ))
+                              ) : (
+                                <span className="text-gray-300">-</span>
+                              )}
+                              {doc.metadata && Object.keys(doc.metadata).length > 3 && <span className="text-[10px] text-gray-400">...</span>}
+                            </div>
+
+                            {/* Hover Tooltip - Shows all metadata */}
+                            {doc.metadata && Object.keys(doc.metadata).length > 0 && (
+                              <div className="absolute left-0 top-full mt-2 bg-ink text-paper text-xs font-mono p-3 rounded-sm shadow-hard-lg border-2 border-paper opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap min-w-[200px]">
+                                <div className="font-bold text-accent mb-2 text-[10px] uppercase tracking-wider">Full Metadata</div>
+                                <div className="space-y-1">
+                                  {Object.entries(doc.metadata).map(([k, v]) => (
+                                    <div key={k} className="flex gap-2">
+                                      <span className="font-bold text-cyan-400">{k}:</span>
+                                      <span className="text-paper">{v}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             )}
-                            {doc.metadata && Object.keys(doc.metadata).length > 3 && <span className="text-[10px] text-gray-400">...</span>}
                           </div>
                         </td>
                         <td className="py-3 pr-4 text-right">

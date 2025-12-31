@@ -2,6 +2,58 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:30 UTC] - Feature 3.1: Metadata Hover Tooltips Complete
+
+**Completed:**
+- ✅ Added hover tooltip to metadata cell in document table
+- ✅ Tooltip displays all metadata entries on hover
+- ✅ Styled with Paper UI theme (ink background, paper text)
+- ✅ Smooth opacity transition on hover
+- ✅ Positioned below cell with proper z-index layering
+- ✅ Non-intrusive (pointer-events-none)
+
+**Changes Made:**
+- `views/UploadView.tsx` - Added metadata hover tooltip to document table
+
+**Technical Notes:**
+- Wraps metadata cell in `relative group` container
+- Shows first 3 metadata badges by default (existing behavior)
+- Tooltip reveals ALL metadata entries on hover
+- Uses Tailwind's `group-hover:opacity-100` for smooth transition
+- `pointer-events-none` prevents tooltip from blocking interactions
+- `z-50` ensures tooltip appears above table content
+- `whitespace-nowrap` prevents text wrapping in tooltip
+
+**UI/UX Features:**
+- Tooltip header: "Full Metadata" in accent color
+- Metadata entries: key (cyan-400) : value (paper)
+- Monospace font for consistency with metadata theme
+- Shadow and border for clear visual separation
+- Minimum width 200px for readability
+- Only appears when metadata exists (conditional rendering)
+
+**Tooltip Design:**
+- Background: bg-ink (dark background)
+- Text: text-paper (light text)
+- Border: 2px border-paper
+- Shadow: shadow-hard-lg (Paper UI shadow)
+- Keys: text-cyan-400 font-bold
+- Values: text-paper
+- Header: text-accent uppercase tracking-wider
+
+**User Flow:**
+1. User views document table
+2. Sees truncated metadata (first 3 entries)
+3. Hovers over metadata cell
+4. Tooltip appears showing ALL metadata entries
+5. Moves cursor away → tooltip fades out
+
+**Next Feature:** 3.2 - Populate Settings Menus (Model Selection)
+
+**Sprint 4 Status:** Frontend Enhancements (1/6 features complete)
+
+---
+
 ## [2025-12-31 07:25 UTC] - Feature 2.4: Admin-Only UI Gates Complete
 
 **Completed:**
