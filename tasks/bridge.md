@@ -2,6 +2,107 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:50 UTC] - Feature 3.5: Ingestion Pipeline UI Updates Complete
+
+**Completed:**
+- ✅ Enhanced progress bar with animated diagonal stripes
+- ✅ Added pipeline stage indicators based on progress percentage
+- ✅ Implemented color-coded stages (blue, purple, indigo, emerald)
+- ✅ Added stage labels (Chunking, Embedding, Graph extraction, Finalizing)
+- ✅ Percentage display alongside stage indicator
+- ✅ Smooth stage transitions with color changes
+
+**Changes Made:**
+- `views/UploadView.tsx` - Enhanced ProgressBar component with stages and animation
+
+**Pipeline Stages:**
+
+**Stage 1: Chunking (0-29%)**
+- Color: Blue (bg-blue-500)
+- Label: "Chunking..."
+- Purpose: Document text splitting into semantic chunks
+
+**Stage 2: Embedding (30-59%)**
+- Color: Purple (bg-purple-500)
+- Label: "Embedding..."
+- Purpose: Vector embedding generation for semantic search
+
+**Stage 3: Graph Extraction (60-89%)**
+- Color: Indigo (bg-indigo-500)
+- Label: "Graph extraction..."
+- Purpose: Knowledge graph node and relationship extraction
+
+**Stage 4: Finalizing (90-100%)**
+- Color: Emerald (bg-emerald-500)
+- Label: "Finalizing..."
+- Purpose: Final indexing and metadata updates
+
+**Visual Enhancements:**
+
+**Animated Stripes:**
+- Diagonal stripe pattern (45deg)
+- White overlay at 20% opacity
+- 20px stripe width
+- 1s linear infinite animation
+- Moves left-to-right continuously
+
+**Progress Bar Layout:**
+- Height: 2px (increased from 1.5px)
+- Stage label: Left-aligned, uppercase, monospace
+- Percentage: Right-aligned, monospace
+- Labels: 10px font size, bold, gray-600
+- Smooth width transitions (300ms ease-out)
+
+**Technical Implementation:**
+
+**getStage() Function:**
+```typescript
+const getStage = () => {
+  if (progress < 30) return { label: 'Chunking...', color: 'bg-blue-500' };
+  if (progress < 60) return { label: 'Embedding...', color: 'bg-purple-500' };
+  if (progress < 90) return { label: 'Graph extraction...', color: 'bg-indigo-500' };
+  return { label: 'Finalizing...', color: 'bg-emerald-500' };
+};
+```
+
+**Animation CSS:**
+```css
+@keyframes progress-stripes {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 0; }
+}
+```
+
+**Inline Styles:**
+- backgroundImage: Diagonal gradient stripe pattern
+- backgroundSize: 20px x 20px
+- animation: progress-stripes 1s linear infinite
+
+**User Experience:**
+
+**Visual Feedback:**
+1. User uploads document
+2. Progress bar appears with "Chunking..." label
+3. Stripes animate left-to-right (1s loop)
+4. Percentage updates in real-time (0-100%)
+5. At 30% → color changes to purple, label "Embedding..."
+6. At 60% → color changes to indigo, label "Graph extraction..."
+7. At 90% → color changes to emerald, label "Finalizing..."
+8. At 100% → progress bar disappears, status badge shows "Indexed"
+
+**Benefits:**
+- Clear visual indication of current pipeline stage
+- Animated stripes show active processing
+- Color-coded stages improve UX clarity
+- Percentage provides precise progress tracking
+- Stage labels explain what's happening
+
+**Next Feature:** 3.6 - Prompt Engineering Lab Improvements
+
+**Sprint 4 Status:** Frontend Enhancements (5/6 features complete)
+
+---
+
 ## [2025-12-31 07:45 UTC] - Feature 3.4: Document Store Maintenance UI Complete
 
 **Completed:**

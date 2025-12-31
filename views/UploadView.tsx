@@ -15,14 +15,48 @@ interface UploadViewProps {
 
 // --- Components ---
 
-const ProgressBar: React.FC<{ progress: number }> = ({ progress }) => (
-  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
-    <div 
-      className="bg-accent h-full rounded-full transition-all duration-300 ease-out" 
-      style={{ width: `${progress}%` }}
-    ></div>
-  </div>
-);
+const ProgressBar: React.FC<{ progress: number }> = ({ progress }) => {
+  // Determine pipeline stage based on progress
+  const getStage = () => {
+    if (progress < 30) return { label: 'Chunking...', color: 'bg-blue-500' };
+    if (progress < 60) return { label: 'Embedding...', color: 'bg-purple-500' };
+    if (progress < 90) return { label: 'Graph extraction...', color: 'bg-indigo-500' };
+    return { label: 'Finalizing...', color: 'bg-emerald-500' };
+  };
+
+  const stage = getStage();
+
+  return (
+    <div className="w-full mt-2">
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-[10px] font-mono font-bold text-gray-600 uppercase tracking-wider">
+          {stage.label}
+        </span>
+        <span className="text-[10px] font-mono font-bold text-gray-500">
+          {progress}%
+        </span>
+      </div>
+      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden relative">
+        <div
+          className={`${stage.color} h-full rounded-full transition-all duration-300 ease-out relative overflow-hidden`}
+          style={{
+            width: `${progress}%`,
+            backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.2) 50%, rgba(255,255,255,.2) 75%, transparent 75%, transparent)',
+            backgroundSize: '20px 20px',
+            animation: 'progress-stripes 1s linear infinite'
+          }}
+        >
+        </div>
+      </div>
+      <style>{`
+        @keyframes progress-stripes {
+          0% { background-position: 0 0; }
+          100% { background-position: 20px 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const SimplePieChart: React.FC<{ data: { label: string; value: number; color: string }[] }> = ({ data }) => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
