@@ -2,6 +2,92 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:40 UTC] - Feature 3.3: API Keys Submit Buttons Complete
+
+**Completed:**
+- ✅ Added "Save API Configuration" submit button to Settings
+- ✅ Implemented handleSaveApiKeys() function
+- ✅ Added success/error message states
+- ✅ Added Workers AI API key input field
+- ✅ Stores API keys in localStorage
+- ✅ Auto-hides success message after 3 seconds
+- ✅ Full error handling with user-friendly messages
+
+**Changes Made:**
+- `views/SettingsView.tsx` - Added save handler, UI feedback, Workers AI input
+
+**Technical Implementation:**
+
+**State Management:**
+- `apiKeySaveSuccess: boolean` - Success state for feedback
+- `apiKeySaveError: string` - Error message state
+
+**Save Handler:**
+```typescript
+const handleSaveApiKeys = () => {
+    setApiKeySaveError('');
+    setApiKeySaveSuccess(false);
+
+    try {
+        localStorage.setItem('metacogna_api_keys', JSON.stringify(config.llm.apiKeys));
+        localStorage.setItem('metacogna_ollama_url', config.llm.ollamaUrl || '');
+        setApiKeySaveSuccess(true);
+        setTimeout(() => setApiKeySaveSuccess(false), 3000);
+    } catch (error) {
+        setApiKeySaveError('Failed to save API keys. Please try again.');
+    }
+};
+```
+
+**UI Components Added:**
+
+**Workers AI Input:**
+- Type: password
+- Label: "Cloudflare API Token (Optional)"
+- Placeholder: "Workers AI runs on your Cloudflare account..."
+- Updates: config.llm.apiKeys.workers
+
+**Success Message:**
+- Green background (bg-green-50)
+- Check icon (lucide-react)
+- Text: "API keys saved successfully!"
+- Auto-dismiss after 3 seconds
+
+**Error Message:**
+- Red background (bg-red-50)
+- X icon (lucide-react)
+- Dynamic error text
+
+**Save Button:**
+- Full width (w-full justify-center)
+- Save icon (lucide-react)
+- Label: "Save API Configuration"
+- Triggers: handleSaveApiKeys()
+
+**Storage Strategy:**
+- localStorage keys: 'metacogna_api_keys', 'metacogna_ollama_url'
+- API keys stored as JSON string
+- TODO: Consider encryption or Worker endpoint for production
+
+**User Flow:**
+1. User selects AI provider (OpenAI, Anthropic, Google, Ollama, Workers AI)
+2. Enters API key in provider-specific input field
+3. Clicks "Save API Configuration" button
+4. Success message appears → auto-dismisses after 3s
+5. Keys persist in localStorage across sessions
+
+**Security Considerations:**
+- API keys stored in localStorage (client-side)
+- Password-type inputs prevent shoulder surfing
+- Future enhancement: encrypt keys or use Worker endpoint
+- Workers AI field optional (runs on Cloudflare account)
+
+**Next Feature:** 3.4 - Document Store Maintenance UI
+
+**Sprint 4 Status:** Frontend Enhancements (3/6 features complete)
+
+---
+
 ## [2025-12-31 07:35 UTC] - Feature 3.2: Populate Settings Menus (Model Selection) Complete
 
 **Completed:**

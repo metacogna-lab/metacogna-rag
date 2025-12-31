@@ -37,7 +37,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
   const [ollamaModels, setOllamaModels] = useState<string[]>(['llama3.2', 'mistral-nemo']);
   const [trainingData, setTrainingData] = useState<TrainingExample[]>([]);
   const [analysisSessions, setAnalysisSessions] = useState<AnalyzedSession[]>([]);
-  
+  const [apiKeySaveSuccess, setApiKeySaveSuccess] = useState(false);
+  const [apiKeySaveError, setApiKeySaveError] = useState('');
+
   // Load Data
   useEffect(() => {
       if (activeTab === 'data') setTrainingData(trainingService.getAll());
@@ -102,6 +104,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
           return ollamaModels.map(m => ({ id: m, name: m }));
       }
       return AVAILABLE_MODELS[config.llm.provider as keyof typeof AVAILABLE_MODELS] || [];
+  };
+
+  const handleSaveApiKeys = () => {
+      setApiKeySaveError('');
+      setApiKeySaveSuccess(false);
+
+      try {
+          // Store API keys in localStorage for now
+          // TODO: In production, consider encrypting keys or storing via Worker endpoint
+          localStorage.setItem('metacogna_api_keys', JSON.stringify(config.llm.apiKeys));
+          localStorage.setItem('metacogna_ollama_url', config.llm.ollamaUrl || '');
+
+          setApiKeySaveSuccess(true);
+
+          // Auto-hide success message after 3 seconds
+          setTimeout(() => setApiKeySaveSuccess(false), 3000);
+      } catch (error) {
+          console.error('Failed to save API keys:', error);
+          setApiKeySaveError('Failed to save API keys. Please try again.');
+      }
   };
 
   return (
@@ -210,6 +232,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
                                         onChange={e => setConfig({...config, llm: {...config.llm, ollamaUrl: e.target.value}})} 
                                      />
                                  )}
+                                {config.llm.provider === 'workers' && (
+                                    <PaperInput
+                                       type="password"
+                                       label="Cloudflare API Token (Optional)"
+                                       value={config.llm.apiKeys.workers || ''}
+                                       onChange={e => updateApiKey('workers', e.target.value)}
+                                       placeholder="Workers AI runs on your Cloudflare account..."
+                                    />
+                                )}
+
+                                {/* Success/Error Messages */}
+                                {apiKeySaveSuccess && (
+                                    <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-sm animate-slide-in flex items-center gap-2">
+                                        <Check size={16} className="text-green-600"/>
+                                        API keys saved successfully!
+                                    </div>
+                                )}
+                                {apiKeySaveError && (
+                                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-sm animate-slide-in flex items-center gap-2">
+                                        <X size={16}/>
+                                        {apiKeySaveError}
+                                    </div>
+                                )}
+
+                                {/* Save Button */}
+                                <PaperButton
+                                    onClick={handleSaveApiKeys}
+                                    className="w-full justify-center"
+                                    icon={<Save size={16}/>}
+                                >
+                                    Save API Configuration
+                                </PaperButton>
                              </div>
                          </div>
                      </PaperCard>
