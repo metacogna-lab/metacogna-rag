@@ -76,27 +76,37 @@ Be forward-looking, practical, and specific in your recommendations.`,
 
 export const PROVIDER_DEFAULT_MODELS = {
   openai: 'gpt-4o-mini',
-  google: 'gemini-3-flash-preview',
-  anthropic: 'claude-3-haiku-20240307',
-  ollama: 'llama3.2'
+  google: 'gemini-1.5-flash',
+  anthropic: 'claude-3-5-sonnet-20241022',
+  ollama: 'llama3.2',
+  workers: '@cf/meta/llama-3-8b-instruct'
 };
 
 export const AVAILABLE_MODELS = {
   openai: [
-    { id: 'gpt-4o', name: 'GPT-4o' },
+    { id: 'gpt-4o', name: 'GPT-4o (Latest)' },
     { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
-    { id: 'o1-preview', name: 'o1 Preview' },
-    { id: 'gpt-5-mini', name: 'GPT-5 Mini (Preview)' }
+    { id: 'o1-preview', name: 'o1 Preview (Reasoning)' },
+    { id: 'o1-mini', name: 'o1 Mini (Reasoning)' },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' }
   ],
   google: [
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
-    { id: 'gemini-2.5-flash-preview-09-2025', name: 'Gemini 2.5 Flash' }
+    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+    { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash-8B' }
   ],
   anthropic: [
-    { id: 'claude-3-5-sonnet-latest', name: 'Claude 3.5 Sonnet' },
-    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet (Latest)' },
+    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
     { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' }
+  ],
+  workers: [
+    { id: '@cf/meta/llama-3-8b-instruct', name: 'Llama 3 8B Instruct' },
+    { id: '@cf/meta/llama-3.1-8b-instruct', name: 'Llama 3.1 8B Instruct' },
+    { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Mistral 7B Instruct' },
+    { id: '@cf/qwen/qwen1.5-14b-chat-awq', name: 'Qwen 1.5 14B Chat' },
+    { id: '@cf/deepseek-ai/deepseek-math-7b-instruct', name: 'DeepSeek Math 7B' }
   ]
 };
 
@@ -110,12 +120,13 @@ export const DEFAULT_CONFIG: AppConfig = {
   activeSystemPromptId: 'sp-1',
   llm: {
     provider: 'google',
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-1.5-flash',
     apiKeys: {
       google: process.env.GEMINI_API_KEY || '',
       openai: '',
       anthropic: '',
-      ollama: ''
+      ollama: '',
+      workers: ''
     },
     temperature: 0.3
   }

@@ -2,6 +2,77 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:35 UTC] - Feature 3.2: Populate Settings Menus (Model Selection) Complete
+
+**Completed:**
+- ✅ Updated AVAILABLE_MODELS with latest model IDs (December 2025)
+- ✅ Added Workers AI provider with 5 models
+- ✅ Updated default models for all providers
+- ✅ Extended LLMProvider type to include 'workers'
+- ✅ Updated LLMModelID with all latest model IDs
+- ✅ Added workers API key field to AppConfig
+- ✅ Added "Workers AI" provider button in SettingsView
+- ✅ Updated provider selector with flex-wrap for responsive layout
+
+**Changes Made:**
+- `constants.ts` - Updated AVAILABLE_MODELS, PROVIDER_DEFAULT_MODELS, DEFAULT_CONFIG
+- `schemas/settings.ts` - Extended LLMProvider type, updated LLMModelID, added workers API key
+- `views/SettingsView.tsx` - Added Workers AI provider button
+
+**Model Updates:**
+
+**OpenAI:**
+- gpt-4o (Latest)
+- gpt-4o-mini
+- o1-preview (Reasoning)
+- o1-mini (Reasoning)
+- gpt-4-turbo
+
+**Google:**
+- gemini-2.0-flash-exp (Experimental)
+- gemini-1.5-pro
+- gemini-1.5-flash (Default)
+- gemini-1.5-flash-8b
+
+**Anthropic:**
+- claude-3-5-sonnet-20241022 (Latest, Default)
+- claude-3-5-haiku-20241022
+- claude-3-opus-20240229
+
+**Workers AI (NEW):**
+- @cf/meta/llama-3-8b-instruct (Default)
+- @cf/meta/llama-3.1-8b-instruct
+- @cf/mistral/mistral-7b-instruct-v0.1
+- @cf/qwen/qwen1.5-14b-chat-awq
+- @cf/deepseek-ai/deepseek-math-7b-instruct
+
+**Technical Notes:**
+- Workers AI provider enables free inference via Cloudflare Workers
+- Model selection dropdown automatically updates based on provider
+- Default models optimized for cost/performance balance
+- API key validation will be added in Feature 3.3
+- Provider buttons responsive with flex-wrap layout
+
+**UI/UX Features:**
+- "Workers AI" label displays as "Workers AI" (not "workers")
+- Provider buttons flex-wrap for 5 providers
+- Consistent styling across all provider options
+- Model dropdown auto-populates based on selected provider
+- Ollama refresh button preserved for dynamic model discovery
+
+**User Flow:**
+1. User opens Settings → Model Intelligence
+2. Sees 5 provider options: Google, OpenAI, Anthropic, Ollama, Workers AI
+3. Selects provider → model dropdown updates with provider's models
+4. Selects model from updated list
+5. Changes persist to AppConfig state
+
+**Next Feature:** 3.3 - API Keys Submit Buttons
+
+**Sprint 4 Status:** Frontend Enhancements (2/6 features complete)
+
+---
+
 ## [2025-12-31 07:30 UTC] - Feature 3.1: Metadata Hover Tooltips Complete
 
 **Completed:**

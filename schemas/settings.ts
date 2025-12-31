@@ -2,21 +2,26 @@
 import { Vault } from './documents';
 import { SystemPrompt } from './prompts';
 
-export type LLMProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
+export type LLMProvider = 'openai' | 'anthropic' | 'google' | 'ollama' | 'workers';
 
-export type LLMModelID = 
-  | 'gpt-5'
-  | 'gpt-5-mini'
-  | 'gpt-4o' 
-  | 'gpt-4o-mini' 
+export type LLMModelID =
+  | 'gpt-4o'
+  | 'gpt-4o-mini'
   | 'o1-preview'
-  | 'claude-3-5-sonnet-latest' 
-  | 'claude-3-haiku-20240307'
-  | 'gemini-3-flash-preview'
-  | 'gemini-3-pro-preview'
+  | 'o1-mini'
+  | 'gpt-4-turbo'
+  | 'claude-3-5-sonnet-20241022'
+  | 'claude-3-5-haiku-20241022'
+  | 'claude-3-opus-20240229'
+  | 'gemini-2.0-flash-exp'
+  | 'gemini-1.5-pro'
+  | 'gemini-1.5-flash'
+  | 'gemini-1.5-flash-8b'
   | 'llama3.2'
   | 'mistral-nemo'
-  | string; // Allow dynamic strings for Ollama or custom models
+  | '@cf/meta/llama-3-8b-instruct'
+  | '@cf/meta/llama-3.1-8b-instruct'
+  | string; // Allow dynamic strings for Ollama, Workers AI, or custom models
 
 export interface AppConfig {
   userName: string;
@@ -34,6 +39,7 @@ export interface AppConfig {
       anthropic?: string;
       google?: string;
       ollama?: string;
+      workers?: string;
     };
     ollamaUrl?: string;
     temperature: number;

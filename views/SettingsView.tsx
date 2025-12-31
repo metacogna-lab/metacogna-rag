@@ -136,14 +136,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ config, setConfig })
                          <div className="space-y-6">
                              <div>
                                  <label className="text-xs font-bold uppercase text-gray-500 block mb-2">Provider</label>
-                                 <div className="flex gap-2">
-                                     {['google', 'openai', 'anthropic', 'ollama'].map(p => (
+                                 <div className="flex gap-2 flex-wrap">
+                                     {['google', 'openai', 'anthropic', 'ollama', 'workers'].map(p => (
                                          <button 
                                             key={p}
                                             onClick={() => handleProviderChange(p as LLMProvider)}
                                             className={`flex-1 py-2 text-xs font-bold uppercase border-2 rounded-sm transition-all ${config.llm.provider === p ? 'bg-ink text-white border-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}`}
                                          >
-                                             {p}
+                                             {p === 'workers' ? 'Workers AI' : p}
                                          </button>
                                      ))}
                                  </div>
