@@ -16,7 +16,22 @@
 - `db/schema.sql` - Enhanced user and document schemas
 - `worker/__tests__/schema.test.ts` - Schema validation tests
 
-**Next Feature:** 1.2 - UUID Generation Utility
+**Next Feature:** 1.3 - R2 Storage Integration
+
+---
+
+## [2025-12-31 06:20 UTC] - Feature 1.2: UUID Generation Utility Complete
+
+**Completed:**
+- ✅ Created `worker/src/utils/uuid.ts` with generateUUID() using crypto.randomUUID()
+- ✅ Created `worker/src/utils/r2-keys.ts` with R2 key generation functions
+- ✅ Implemented generateR2Key(), generateR2DocumentKey(), generateR2ProfileKey()
+- ✅ All 12 tests passing (UUID v4 validation, uniqueness, R2 key structure)
+
+**Changes Made:**
+- `worker/src/utils/uuid.ts` - UUID v4 generation
+- `worker/src/utils/r2-keys.ts` - R2 key generation utilities
+- `worker/__tests__/uuid.test.ts` - UUID and R2 key tests
 
 ---
 
