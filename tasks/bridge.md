@@ -2,6 +2,41 @@
 
 *** RECORD CURRENT AND NEXT STATE HERE WITH A TIMESTAMP. UPDATE EVERY COMMIT***
 
+## [2025-12-31 07:15 UTC] - Feature 2.2: Guest Login UI (Remove Signup Button) Complete
+
+**Completed:**
+- ✅ Removed mode toggle ('login' | 'register') from AuthView
+- ✅ Removed Sign Up button and tab switcher
+- ✅ Removed authService.register() calls from UI
+- ✅ Added "No account? Contact administrator" message
+- ✅ Updated UI to login-only interface
+- ✅ Added AlertCircle icon for no-account message
+- ✅ Updated badge text: "Worker Auth • SHA-256"
+- ✅ Simplified header to "System Access" only
+
+**Changes Made:**
+- `views/AuthView.tsx` - Login-only UI, removed signup functionality
+
+**Technical Notes:**
+- Removed state: mode toggle between login/register
+- Removed UI: Sign In/Sign Up tab switcher
+- Added message: "Contact your system administrator to request access"
+- Message styling: Blue info box with AlertCircle icon
+- Login flow: username → password → authenticate → session
+- Badge updated to reflect Worker authentication (not localStorage)
+
+**UI/UX Changes:**
+- Cleaner single-purpose login form
+- Clear messaging for users without accounts
+- Emphasis on admin-controlled access
+- Professional "restricted access" appearance
+
+**Next Feature:** 2.3 - Admin-Only Signup UI
+
+**Sprint 3 Status:** Frontend Auth Migration (2/4 features complete)
+
+---
+
 ## [2025-12-31 07:10 UTC] - Feature 2.1: Remove localStorage Auth Complete
 
 **Completed:**

@@ -1,15 +1,24 @@
 
 import React, { useState } from 'react';
 import { PaperCard, PaperButton, PaperInput, PaperBadge } from '../components/PaperComponents';
-import { Shield, UserPlus, LogIn, Cpu, Lock } from 'lucide-react';
+import { Shield, LogIn, Cpu, Lock, AlertCircle } from 'lucide-react';
 import { authService } from '../services/AuthService';
 
 interface AuthViewProps {
     onLoginSuccess: () => void;
 }
 
+/**
+ * AuthView - Login-Only Interface
+ *
+ * CHANGES from previous version:
+ * - Removed mode toggle (login/register)
+ * - Removed Sign Up button
+ * - Removed authService.register() calls
+ * - Added "No account? Contact administrator" message
+ * - Login-only authentication via Worker API
+ */
 export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
-    const [mode, setMode] = useState<'login' | 'register'>('login');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -30,20 +39,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
         try {
             await new Promise(r => setTimeout(r, 800)); // Fake network delay for realism
 
-            if (mode === 'register') {
-                const res = await authService.register(username, password);
-                if (res.success) {
-                    onLoginSuccess();
-                } else {
-                    setError(res.message);
-                }
+            const res = await authService.login(username, password);
+            if (res.success) {
+                onLoginSuccess();
             } else {
-                const res = await authService.login(username, password);
-                if (res.success) {
-                    onLoginSuccess();
-                } else {
-                    setError(res.message);
-                }
+                setError(res.message);
             }
         } catch (e) {
             setError("An unexpected error occurred.");
@@ -70,41 +70,30 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
                 </div>
 
                 <PaperCard className="border-t-4 border-t-accent">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="mb-6">
                         <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                            {mode === 'login' ? <LogIn size={20}/> : <UserPlus size={20}/>}
-                            {mode === 'login' ? 'System Access' : 'Create Identity'}
+                            <LogIn size={20}/>
+                            System Access
                         </h2>
-                        <div className="flex bg-gray-100 p-1 rounded-sm">
-                            <button 
-                                onClick={() => { setMode('login'); setError(''); }}
-                                className={`px-3 py-1 text-[10px] font-bold uppercase rounded-sm transition-all ${mode === 'login' ? 'bg-white shadow-sm text-ink' : 'text-gray-400'}`}
-                            >
-                                Sign In
-                            </button>
-                            <button 
-                                onClick={() => { setMode('register'); setError(''); }}
-                                className={`px-3 py-1 text-[10px] font-bold uppercase rounded-sm transition-all ${mode === 'register' ? 'bg-white shadow-sm text-ink' : 'text-gray-400'}`}
-                            >
-                                Sign Up
-                            </button>
-                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Enter your credentials to access the system
+                        </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <PaperInput 
-                            label="Username" 
-                            placeholder="Enter ID..." 
-                            value={username} 
+                        <PaperInput
+                            label="Username"
+                            placeholder="Enter ID..."
+                            value={username}
                             onChange={e => setUsername(e.target.value)}
                             disabled={isLoading}
                         />
                         <div className="relative">
-                            <PaperInput 
-                                label="Password" 
-                                type="password" 
-                                placeholder="Enter Secret..." 
-                                value={password} 
+                            <PaperInput
+                                label="Password"
+                                type="password"
+                                placeholder="Enter Secret..."
+                                value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 disabled={isLoading}
                             />
@@ -118,19 +107,33 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
                         )}
 
                         <div className="pt-2">
-                            <PaperButton 
-                                type="submit" 
-                                className="w-full justify-center" 
+                            <PaperButton
+                                type="submit"
+                                className="w-full justify-center"
                                 disabled={isLoading}
                                 icon={isLoading ? <Cpu size={16} className="animate-spin"/> : <Shield size={16}/>}
                             >
-                                {isLoading ? 'Authenticating...' : mode === 'login' ? 'Initialize Session' : 'Register Identity'}
+                                {isLoading ? 'Authenticating...' : 'Initialize Session'}
                             </PaperButton>
                         </div>
                     </form>
 
+                    {/* No Account Message */}
+                    <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-sm">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle size={16} className="text-blue-600 mt-0.5 flex-shrink-0"/>
+                            <div className="text-xs">
+                                <p className="font-bold text-blue-900 mb-1">No account?</p>
+                                <p className="text-blue-700">
+                                    Contact your system administrator to request access.
+                                    Account creation is restricted to authorized personnel.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mt-6 text-center">
-                        <PaperBadge color="ink">Secure Local Vault • SHA-256</PaperBadge>
+                        <PaperBadge color="ink">Worker Auth • SHA-256</PaperBadge>
                     </div>
                 </PaperCard>
             </div>
